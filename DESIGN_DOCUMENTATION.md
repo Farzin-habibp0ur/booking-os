@@ -1,32 +1,43 @@
-# Booking OS — Complete Product & UI Documentation
+# Business Command Centre — Complete Product & UI Documentation
 
-> **Purpose:** This document provides a comprehensive reference of the entire Booking OS application — its features, pages, components, data models, design system, and user flows. Use it as context for generating high-fidelity UI designs and exploring UX improvements.
+> **Purpose:** Comprehensive reference for the Business Command Centre platform — the AI Front Desk product's features, pages, components, data models, design system, and user flows. Use it as context for generating high-fidelity UI designs and exploring UX improvements.
 >
-> **Last updated:** February 2026
+> **Last updated:** May 2026 (post AI Front Desk wedge pivot)
 
 ---
 
 ## 1. Product Overview
 
-**Booking OS** is a multi-tenant SaaS platform for service-based businesses (aesthetic clinics, salons) to manage bookings, customer conversations, and operations — with AI-powered agentic automation.
+**Business Command Centre (BCC)** is the company. **AI Front Desk** is the first product — a multi-tenant SaaS for medical spas that captures Instagram, WhatsApp, and website leads, drafts replies for staff approval, fills cancellations from the waitlist, follows up on consults and quotes, and proves **revenue captured + bookings that would have been missed** in a single two-metric dashboard.
 
-### Core Capabilities
+> **Wedge promise:** Turn missed clinic messages into booked appointments — and prove it on the dashboard every week.
 
-- **Appointment scheduling** with calendar views, conflict detection, recurring bookings, and automated reminders
-- **WhatsApp messaging inbox** with real-time updates, AI auto-replies, and conversation management
-- **AI booking assistant** that guides customers through booking/cancellation/rescheduling via chat
-- **Customer management** with profiles, tags, import/export, AI chat, and bulk actions
-- **Staff management** with roles, working hours, time off, and email invitations
-- **Service catalog** with categories, pricing, durations, buffer times, deposit requirements, and service kinds
-- **Analytics & reports** with charts for bookings, revenue, staff performance, peak hours, consult conversion
-- **Multi-language support** (English, Spanish) with customizable per-business translation overrides
-- **Billing integration** via Stripe (basic/pro plans), deposit collection
-- **Calendar sync** — Google Calendar OAuth integration, iCal feed generation
-- **Vertical packs** — industry-specific configurations (aesthetic, salon, tutoring, general)
-- **Public booking portal** — Customer-facing booking page at `/book/{slug}` with waitlist join
-- **Setup wizard** — 10-step onboarding flow with feature readiness checklist and test booking
-- **Dark mode** — System preference detection, manual toggle, full UI coverage
-- **Global search** — Cmd+K command palette across customers, bookings, services, conversations
+- **Year-1 customer:** US and Canada **medical spas**, owner-operated, 1–10 locations, $800K–$2.5M revenue, public Instagram presence.
+- **Vertical pack:** `AESTHETIC` only. The `GENERAL`, `SALON`, and `TUTORING` packs were removed in the pivot. Pack system retained as a customization layer (services, intake fields, templates, automations) — not as a multi-vertical strategy.
+- **Compliance posture:** non-HIPAA, non-PHI in Year 1. _"BCC is non-clinical infrastructure. Your PMS remains the system of record for any patient health information."_ See [`docs/COMPLIANCE-POSTURE.md`](docs/COMPLIANCE-POSTURE.md).
+- **CTA, everywhere:** **Apply for Pilot** (30-day free concierge pilot, 5 slots before continue/kill).
+- **Future product:** AI Marketing Manager (not yet built — 12 in-app marketing agents in `apps/api/src/modules/marketing-agent/` are dormant). See [`docs/AI-AGENT-ARCHITECTURE.md`](docs/AI-AGENT-ARCHITECTURE.md).
+
+### Core capabilities
+
+- **Omnichannel inbox** — WhatsApp, Instagram DM, Facebook Messenger, SMS, Email, Web Chat in one inbox with real-time updates, channel badges, draft persistence, and the AI draft pipeline.
+- **AI Front Desk drafts** — Every inbound message is drafted by the AI for staff approval; auto-send is opt-in per channel. Backed by intent detection, channel-aware reply generation, and the booking / cancel / reschedule assistants.
+- **5 operational agents** — Waitlist, Retention, Data Hygiene, Scheduling Optimizer, Quote Followup. All bundled into the AI Front Desk SKU. Card metadata carries `suggestedMessages` for channel-appropriate follow-ups.
+- **Two-metric attribution dashboard** — `Bookings captured` and `Bookings that would have been missed without BCC` derived from `FrontDeskAttribution` rows, with the seven attribution reasons defined in [`docs/BOOKING-ATTRIBUTION-DEFINITION.md`](docs/BOOKING-ATTRIBUTION-DEFINITION.md).
+- **Appointment scheduling** — calendar (day / week / month), conflict detection, drag-and-drop reschedule, recommended slots, working-hours and time-off shading, automated reminders.
+- **Customer management** — profiles, tags, custom fields, conversation timeline, CSV import, AI-extracted profile data, merge / dedup.
+- **Staff management** — roles (Owner / Admin / Agent / Service Provider / Super Admin), working hours, time off, email invitations.
+- **Service catalog** — categories, durations, pricing, buffer times, deposit requirements, service kinds (CONSULT / TREATMENT / OTHER).
+- **Multi-location** — locations per business with per-location channel configs.
+- **Public booking portal** at `/book/{slug}` and customer self-service portal at `/portal`.
+- **Waitlist** — auto-offers on cancellation, 1-tap claim via token; the `WaitlistAgent` matches waitlist entries to cancelled slots.
+- **Automations** — built-in playbooks plus custom rule builder, dry-run, quiet hours, frequency caps, activity log.
+- **Campaigns (gated)** — WhatsApp / SMS / email campaigns with segmentation, A/B testing, delivery funnel; gated behind `business.campaignsEnabled` (default off during pilot).
+- **Reports** — bookings, revenue, staff performance, no-show rates, peak hours, consult-to-treatment conversion, source breakdown. CSV / PDF export.
+- **Calendar sync** — Google Calendar + Outlook OAuth, iCal feed generation.
+- **Multi-language** — English and Spanish, per-business translation overrides.
+- **Billing** — Stripe products for the AI Front Desk SKU ($397/mo single-location, $197/mo per added location, 15% annual discount). Pilot graduation flow runs through Stripe Checkout.
+- **Dark mode**, **global search (Cmd+K)**, **PWA** — all retained.
 
 ### Phase 1: Outcome Machine for Aesthetics (Complete — 27/27 tasks)
 
@@ -188,11 +199,7 @@
 - **Services:** Botox ($350/30min, deposit $100), Dermal Filler ($500/45min), Chemical Peel ($200/60min), Microneedling ($275/45min), Consultation (Free/20min)
 - **Customers:** 20+ including Emma Wilson (VIP), James Thompson, Sofia Rodriguez, Liam Parker
 
-**Metro Auto Group** (slug: metro-auto)
-
-- **Login:** mike@metroauto.com / Bk0s!DemoSecure#2026
-- **Staff:** Mike Torres (Admin), Jen Davis (Agent), Carlos Ruiz (Service Provider), Priya Shah (Service Provider)
-- **Services:** Oil Change, Full Detailing, Brake Service, Tire Rotation, Pre-Purchase Inspection
+> Year-1 demo data is medical-spa only. Legacy multi-vertical demo accounts (Metro Auto Group, salon, tutoring) were removed in the pivot. Console showcase data (`packages/db/src/seed-console-showcase.ts`) varies by health state and timezone, but all six showcase tenants use the `aesthetic` vertical pack.
 
 ---
 
