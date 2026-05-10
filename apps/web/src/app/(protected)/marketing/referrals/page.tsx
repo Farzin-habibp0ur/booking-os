@@ -324,10 +324,18 @@ export default function ReferralSettingsPage() {
         {/* Referrer + Referee credits */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
-            <label className="text-sm font-medium text-slate-700 mb-1 block">Referrer earns</label>
+            <label
+              htmlFor="referrer-credit"
+              className="text-sm font-medium text-slate-700 mb-1 block"
+            >
+              Referrer earns
+            </label>
             <div className="flex items-center gap-2">
-              <span className="text-sm text-slate-500">$</span>
+              <span className="text-sm text-slate-500" aria-hidden="true">
+                $
+              </span>
               <input
+                id="referrer-credit"
                 type="number"
                 min={5}
                 max={500}
@@ -346,10 +354,18 @@ export default function ReferralSettingsPage() {
           </div>
 
           <div>
-            <label className="text-sm font-medium text-slate-700 mb-1 block">Friend earns</label>
+            <label
+              htmlFor="referee-credit"
+              className="text-sm font-medium text-slate-700 mb-1 block"
+            >
+              Friend earns
+            </label>
             <div className="flex items-center gap-2">
-              <span className="text-sm text-slate-500">$</span>
+              <span className="text-sm text-slate-500" aria-hidden="true">
+                $
+              </span>
               <input
+                id="referee-credit"
                 type="number"
                 min={5}
                 max={500}
@@ -370,11 +386,15 @@ export default function ReferralSettingsPage() {
 
         {/* Credit expiry */}
         <div className="mt-5">
-          <label className="text-sm font-medium text-slate-700 mb-1 block">
+          <label
+            htmlFor="credit-expiry"
+            className="text-sm font-medium text-slate-700 mb-1 block"
+          >
             <Clock size={13} className="inline mr-1 -mt-0.5" />
             Credit expiry
           </label>
           <select
+            id="credit-expiry"
             value={settings.creditExpiryMonths}
             onChange={(e) =>
               setSettings((s) => ({
@@ -394,11 +414,15 @@ export default function ReferralSettingsPage() {
 
         {/* Max referrals */}
         <div className="mt-5">
-          <label className="text-sm font-medium text-slate-700 mb-1 block">
+          <label
+            htmlFor="max-referrals"
+            className="text-sm font-medium text-slate-700 mb-1 block"
+          >
             Max referrals per patient
           </label>
           <div className="flex items-center gap-2">
             <input
+              id="max-referrals"
               type="number"
               min={0}
               max={999}
@@ -454,6 +478,7 @@ export default function ReferralSettingsPage() {
 
         {/* Template textarea */}
         <textarea
+          aria-label="Referral message template"
           value={settings.messageTemplate}
           onChange={(e) =>
             setSettings((s) => ({
@@ -477,8 +502,14 @@ export default function ReferralSettingsPage() {
 
         {/* Email subject */}
         <div className="mt-4">
-          <label className="text-sm font-medium text-slate-700 mb-1 block">Email Subject</label>
+          <label
+            htmlFor="email-subject"
+            className="text-sm font-medium text-slate-700 mb-1 block"
+          >
+            Email Subject
+          </label>
           <input
+            id="email-subject"
             type="text"
             value={settings.emailSubject}
             onChange={(e) =>

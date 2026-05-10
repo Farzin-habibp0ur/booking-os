@@ -105,8 +105,11 @@ export default function SettingsPage() {
           <h2 className="font-semibold">{t('settings.business_info')}</h2>
 
           <div>
-            <label className="block text-sm font-medium mb-1">{t('settings.business_name')}</label>
+            <label htmlFor="settings-business-name" className="block text-sm font-medium mb-1">
+              {t('settings.business_name')}
+            </label>
             <input
+              id="settings-business-name"
               value={name}
               onChange={(e) => setName(e.target.value)}
               className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm"
@@ -114,8 +117,11 @@ export default function SettingsPage() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-1">{t('settings.phone')}</label>
+            <label htmlFor="settings-phone" className="block text-sm font-medium mb-1">
+              {t('settings.phone')}
+            </label>
             <input
+              id="settings-phone"
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
               className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm"
@@ -123,8 +129,11 @@ export default function SettingsPage() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-1">{t('settings.timezone')}</label>
+            <label htmlFor="settings-timezone" className="block text-sm font-medium mb-1">
+              {t('settings.timezone')}
+            </label>
             <input
+              id="settings-timezone"
               value={timezone}
               onChange={(e) => setTimezone(e.target.value)}
               className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm"
@@ -132,8 +141,11 @@ export default function SettingsPage() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-1">{t('settings.vertical_pack')}</label>
+            <label htmlFor="settings-vertical-pack" className="block text-sm font-medium mb-1">
+              {t('settings.vertical_pack')}
+            </label>
             <input
+              id="settings-vertical-pack"
               value={business?.verticalPack || ''}
               disabled
               className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm bg-slate-50"
@@ -157,37 +169,45 @@ export default function SettingsPage() {
             <div className="bg-red-50 text-red-600 p-3 rounded text-sm">{passwordError}</div>
           )}
           <div>
-            <label className="block text-sm font-medium mb-1">
+            <label htmlFor="settings-current-password" className="block text-sm font-medium mb-1">
               {t('settings.current_password')}
             </label>
             <input
+              id="settings-current-password"
               type="password"
               value={currentPassword}
               onChange={(e) => setCurrentPassword(e.target.value)}
               className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm"
+              autoComplete="current-password"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium mb-1">{t('settings.new_password')}</label>
+            <label htmlFor="settings-new-password" className="block text-sm font-medium mb-1">
+              {t('settings.new_password')}
+            </label>
             <input
+              id="settings-new-password"
               type="password"
               value={newPassword}
               onChange={(e) => setNewPassword(e.target.value)}
               className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm"
               minLength={8}
               placeholder={t('settings.password_placeholder')}
+              autoComplete="new-password"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium mb-1">
+            <label htmlFor="settings-confirm-password" className="block text-sm font-medium mb-1">
               {t('settings.confirm_password')}
             </label>
             <input
+              id="settings-confirm-password"
               type="password"
               value={confirmNewPassword}
               onChange={(e) => setConfirmNewPassword(e.target.value)}
               className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm"
               minLength={8}
+              autoComplete="new-password"
             />
           </div>
           <div className="flex items-center gap-3">
@@ -215,6 +235,7 @@ export default function SettingsPage() {
             <div className="flex items-center gap-2 mt-3">
               <input
                 readOnly
+                aria-label={t('settings.booking_link')}
                 value={
                   typeof window !== 'undefined'
                     ? `${window.location.origin}/book/${business.slug}`
@@ -249,6 +270,7 @@ export default function SettingsPage() {
           <div className="flex items-center gap-2 mt-3">
             <input
               type="url"
+              aria-label="Google review URL"
               value={googleReviewUrl}
               onChange={(e) => {
                 setGoogleReviewUrl(e.target.value);

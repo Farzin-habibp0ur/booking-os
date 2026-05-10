@@ -18,14 +18,21 @@ test.describe('Workflow Tests', () => {
     await loginViaApi(page);
   });
 
-  // Helper: generate a unique future date far enough to avoid time slot conflicts
-  // Uses a large random day offset (30-90 days) + random minutes for uniqueness
-  let dateCounter = 0;
+  // Helper: generate a unique future date far enough to avoid time slot conflicts.
+  // Bookings persist in the dev DB across test runs (no truncation between
+  // runs in the local stack), so we randomise the day, hour, minute, AND
+  // second on every call. With a 365-day window and per-second resolution,
+  // collision probability across many reruns is negligible.
   function uniqueFutureDate(hour: number): string {
-    dateCounter++;
     const d = new Date();
-    d.setDate(d.getDate() + 30 + dateCounter * 10 + Math.floor(Math.random() * 5));
-    d.setHours(hour, Math.floor(Math.random() * 50) + 1, 0, 0);
+    const dayOffset = 365 + Math.floor(Math.random() * 365);
+    d.setDate(d.getDate() + dayOffset);
+    d.setHours(
+      hour,
+      Math.floor(Math.random() * 60),
+      Math.floor(Math.random() * 60),
+      Math.floor(Math.random() * 1000),
+    );
     return d.toISOString();
   }
 

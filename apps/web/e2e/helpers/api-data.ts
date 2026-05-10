@@ -2,30 +2,29 @@ import { Page } from '@playwright/test';
 
 const API_URL = 'http://localhost:3001/api/v1';
 
-async function getAuthHeaders(page: Page): Promise<Record<string, string>> {
-  const token = await page.evaluate(() => localStorage.getItem('token'));
-  return {
-    Authorization: `Bearer ${token}`,
-    'Content-Type': 'application/json',
-  };
+/**
+ * page.request automatically uses cookies from the BrowserContext, so as long
+ * as the page is authenticated (via loginViaApi or loginViaUi), API calls go
+ * through with the access_token cookie. We do not need to read a Bearer token
+ * from localStorage — auth is httpOnly cookie based.
+ */
+function getHeaders(): Record<string, string> {
+  return { 'Content-Type': 'application/json' };
 }
 
 export async function getServicesViaApi(page: Page) {
-  const headers = await getAuthHeaders(page);
-  const response = await page.request.get(`${API_URL}/services`, { headers });
+  const response = await page.request.get(`${API_URL}/services`, { headers: getHeaders() });
   const body = await response.json();
   return body?.data || body || [];
 }
 
 export async function getStaffViaApi(page: Page) {
-  const headers = await getAuthHeaders(page);
-  const response = await page.request.get(`${API_URL}/staff`, { headers });
+  const response = await page.request.get(`${API_URL}/staff`, { headers: getHeaders() });
   return response.json();
 }
 
 export async function getCustomersViaApi(page: Page) {
-  const headers = await getAuthHeaders(page);
-  const response = await page.request.get(`${API_URL}/customers`, { headers });
+  const response = await page.request.get(`${API_URL}/customers`, { headers: getHeaders() });
   const body = await response.json();
   return body?.data || body || [];
 }
@@ -34,9 +33,8 @@ export async function createBookingViaApi(
   page: Page,
   data: { serviceId: string; staffId: string; customerId: string; startTime: string },
 ) {
-  const headers = await getAuthHeaders(page);
   const response = await page.request.post(`${API_URL}/bookings`, {
-    headers,
+    headers: getHeaders(),
     data,
   });
   if (!response.ok()) {
@@ -52,29 +50,26 @@ export async function updateBookingStatusViaApi(
   status: string,
   reason?: string,
 ) {
-  const headers = await getAuthHeaders(page);
   const response = await page.request.patch(`${API_URL}/bookings/${bookingId}/status`, {
-    headers,
+    headers: getHeaders(),
     data: { status, ...(reason ? { reason } : {}) },
   });
   return response.json();
 }
 
 export async function sendRescheduleLinkViaApi(page: Page, bookingId: string) {
-  const headers = await getAuthHeaders(page);
   const response = await page.request.post(
     `${API_URL}/bookings/${bookingId}/send-reschedule-link`,
     {
-      headers,
+      headers: getHeaders(),
     },
   );
   return response.json();
 }
 
 export async function sendCancelLinkViaApi(page: Page, bookingId: string) {
-  const headers = await getAuthHeaders(page);
   const response = await page.request.post(`${API_URL}/bookings/${bookingId}/send-cancel-link`, {
-    headers,
+    headers: getHeaders(),
   });
   return response.json();
 }

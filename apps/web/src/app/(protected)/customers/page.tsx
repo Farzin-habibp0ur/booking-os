@@ -295,6 +295,7 @@ export default function CustomersPage() {
                 <th className="w-10 p-3">
                   <input
                     type="checkbox"
+                    aria-label="Select all customers"
                     checked={
                       (customers.data || []).length > 0 &&
                       selectedIds.size === (customers.data || []).length
@@ -388,6 +389,7 @@ export default function CustomersPage() {
                       <td className="w-10 p-3" onClick={(e) => e.stopPropagation()}>
                         <input
                           type="checkbox"
+                          aria-label={`Select customer ${c.name || ''}`}
                           checked={selectedIds.has(c.id)}
                           onChange={() => toggleSelect(c.id)}
                           className="rounded text-sage-600"

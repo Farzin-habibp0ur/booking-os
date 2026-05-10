@@ -173,30 +173,42 @@ function LoginPage() {
               {t('login.reset_success')}
             </div>
           )}
-          {error && <div className="bg-red-50 text-red-600 p-3 rounded-xl text-sm">{error}</div>}
+          {error && (
+            <div role="alert" className="bg-red-50 text-red-600 p-3 rounded-xl text-sm">
+              {error}
+            </div>
+          )}
           <div>
-            <label className="block text-sm font-medium mb-1">{t('login.email_label')}</label>
+            <label htmlFor="login-email" className="block text-sm font-medium mb-1">
+              {t('login.email_label')}
+            </label>
             <input
+              id="login-email"
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sage-500"
               required
+              autoComplete="email"
             />
           </div>
           <div>
             <div className="flex items-center justify-between mb-1">
-              <label className="block text-sm font-medium">{t('login.password_label')}</label>
+              <label htmlFor="login-password" className="block text-sm font-medium">
+                {t('login.password_label')}
+              </label>
               <Link href="/forgot-password" className="text-xs text-sage-600 hover:underline">
                 {t('login.forgot_password')}
               </Link>
             </div>
             <input
+              id="login-password"
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sage-500"
               required
+              autoComplete="current-password"
             />
           </div>
           <button
@@ -209,7 +221,7 @@ function LoginPage() {
         </form>
         <p className="text-sm text-center mt-4 text-slate-500">
           {t('login.no_account')}{' '}
-          <Link href="/signup" className="text-sage-600 hover:underline">
+          <Link href="/signup" className="text-sage-700 underline hover:no-underline">
             {t('login.sign_up')}
           </Link>
         </p>

@@ -418,6 +418,7 @@ function BookingsContent() {
             <Download size={16} /> Export CSV
           </button>
           <select
+            aria-label={t('bookings.filter_by_status', undefined) || 'Filter by status'}
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
             className="border border-slate-200 rounded-xl px-3 py-2 text-sm transition-colors w-full sm:w-auto"
@@ -463,6 +464,7 @@ function BookingsContent() {
           </button>
         ))}
         <select
+          aria-label="Filter by staff"
           value={staffFilter}
           onChange={(e) => setStaffFilter(e.target.value)}
           className="rounded-xl border-slate-200 border text-sm px-3 py-1.5 ml-2"
@@ -476,6 +478,7 @@ function BookingsContent() {
           ))}
         </select>
         <select
+          aria-label="Filter by service"
           value={serviceFilter}
           onChange={(e) => setServiceFilter(e.target.value)}
           className="rounded-xl border-slate-200 border text-sm px-3 py-1.5 ml-2"
@@ -649,6 +652,7 @@ function BookingsContent() {
                 <th className="w-10 p-3 print:hidden">
                   <input
                     type="checkbox"
+                    aria-label="Select all bookings"
                     checked={
                       sortedBookings.length > 0 && selectedIds.size === sortedBookings.length
                     }
@@ -717,6 +721,7 @@ function BookingsContent() {
                       <td className="w-10 p-3 print:hidden" onClick={(e) => e.stopPropagation()}>
                         <input
                           type="checkbox"
+                          aria-label={`Select booking for ${b.customer?.name || 'customer'}`}
                           checked={selectedIds.has(b.id)}
                           onChange={() => toggleSelect(b.id)}
                           className="rounded text-sage-600"

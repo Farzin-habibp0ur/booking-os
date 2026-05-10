@@ -155,6 +155,7 @@ function ShellInner({ children }: { children: ReactNode }) {
       pathname === '/' ||
       pathname.startsWith('/settings') ||
       pathname.startsWith('/admin/') ||
+      pathname.startsWith('/setup') ||
       allowed.has(pathname) ||
       [...allowed].some((p) => pathname.startsWith(p + '/'));
     if (!isAllowed) {
