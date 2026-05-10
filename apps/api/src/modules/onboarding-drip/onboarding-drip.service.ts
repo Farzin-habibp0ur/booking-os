@@ -7,6 +7,11 @@ import { EmailService } from '../email/email.service';
 import { ConfigService } from '@nestjs/config';
 import { QUEUE_NAMES } from '../../common/queue/queue.module';
 
+// TODO: Full rewrite for AI Front Desk wedge — deferred per
+// BCC-PIVOT-MASTER-PLAN.md (v3) Phase 10. Current copy retains generic
+// onboarding/dunning framing; will be re-authored once first 5 paying
+// pilots graduate.
+
 export interface DripEmail {
   step: number;
   delayHours: number;

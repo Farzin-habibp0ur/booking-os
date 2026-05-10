@@ -3,7 +3,7 @@
  * pricing, Stripe env-var keys, and feature limits.
  */
 
-export type PlanTier = 'starter' | 'professional' | 'enterprise';
+export type PlanTier = 'starter' | 'professional' | 'enterprise' | 'aifd';
 
 export interface PlanLimits {
   maxStaff: number; // -1 = unlimited
@@ -97,9 +97,32 @@ export const PLAN_CONFIGS: Record<PlanTier, PlanConfig> = {
       whiteLabelBooking: true,
     },
   },
+  // AI Front Desk pilot graduation tier — BCC-PIVOT-MASTER-PLAN.md v3 Phase 10
+  aifd: {
+    tier: 'aifd',
+    label: 'AI Front Desk',
+    monthlyPrice: 397,
+    annualPrice: 337.5, // $4,050/yr ÷ 12 = $337.50/mo equivalent (matches existing per-month convention)
+    stripePriceEnvMonthly: 'STRIPE_PRICE_ID_AIFD_MONTHLY',
+    stripePriceEnvAnnual: 'STRIPE_PRICE_ID_AIFD_ANNUAL',
+    limits: {
+      maxStaff: -1,
+      maxClients: -1,
+      maxAgents: -1,
+      whatsappInbox: true,
+      smsNotifications: true,
+      googleReviews: true,
+      aiAutoReplies: true,
+      campaigns: true,
+      advancedReports: true,
+      multiLocation: true,
+      apiAccess: true,
+      whiteLabelBooking: true,
+    },
+  },
 };
 
-export const PLAN_TIERS: PlanTier[] = ['starter', 'professional', 'enterprise'];
+export const PLAN_TIERS: PlanTier[] = ['starter', 'professional', 'enterprise', 'aifd'];
 
 /** Map legacy plan names to new tiers */
 export function normalizePlanTier(plan: string): PlanTier {

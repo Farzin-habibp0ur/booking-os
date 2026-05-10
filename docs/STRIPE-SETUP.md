@@ -183,3 +183,44 @@ For debugging, here is the end-to-end checkout flow:
 - [ ] Verify Subscription record created in database
 - [ ] Switch to live keys (`sk_live_`, new webhook secret, new price IDs)
 - [ ] Repeat verification with a real card (refund immediately)
+
+---
+
+## AI Front Desk pilot pricing (BCC-PIVOT-MASTER-PLAN.md v3 Phase 10)
+
+After the first pilot graduates, create these products in the Stripe Dashboard.
+
+### Product: AI Front Desk
+
+#### Price 1 — Monthly, first location
+- Product name: "AI Front Desk"
+- Price: $397.00 USD / month
+- Recurring: Monthly
+- Tax behavior: Inclusive
+- Set env var: `STRIPE_PRICE_ID_AIFD_MONTHLY`
+
+#### Price 2 — Annual, first location
+- Same product
+- Price: $4,050.00 USD / year (15% annual discount)
+- Recurring: Yearly
+- Set env var: `STRIPE_PRICE_ID_AIFD_ANNUAL`
+
+#### Price 3 — Monthly, per added location
+- New product: "AI Front Desk — Additional Location"
+- Price: $197.00 USD / month
+- Recurring: Monthly
+- Quantity-based (one Stripe subscription line per added location)
+- Set env var: `STRIPE_PRICE_ID_AIFD_ADDL_LOC_MONTHLY`
+
+#### Price 4 — Annual, per added location
+- Same "Additional Location" product
+- Price: $2,008.00 USD / year (15% annual discount; rounded down to whole dollar)
+- Recurring: Yearly
+- Set env var: `STRIPE_PRICE_ID_AIFD_ADDL_LOC_ANNUAL`
+
+### Messaging cap
+The AI Front Desk SKU includes flat-rate messaging up to **5,000 messages/month** (combined across all channels). Overage is billed manually for now (Stripe metered billing not wired). Revisit after second pilot graduation.
+
+### Internal-only reminder
+The public CTA is `/pilot`. Do NOT link to Stripe Checkout from the marketing
+site — graduation is operator-driven.
