@@ -53,10 +53,7 @@ test.describe('Internal/External Boundary', () => {
 
     // Wait for page to load (either the agents-page testid or the "Core Agents" text)
     await expect(
-      page
-        .locator('[data-testid="agents-page"]')
-        .or(page.getByText('Core Agents'))
-        .first(),
+      page.locator('[data-testid="agents-page"]').or(page.getByText('Core Agents')).first(),
     ).toBeVisible({ timeout: 15000 });
 
     // Core agents should be visible (if configured)
