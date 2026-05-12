@@ -22,32 +22,30 @@ test.describe('Settings', () => {
     await page.goto('/settings');
     await page.waitForLoadState('networkidle');
 
-    // Find business name input — look for input by label, name, or placeholder
-    const businessNameInput = page.locator(
-      'input[name*="name" i], input[name*="business" i], input[placeholder*="business" i], input[placeholder*="name" i]',
-    );
+    // Business name input lives under a "Business Name" label in the
+    // Business Info card on the settings root page (rendered after the
+    // category hub). The label isn't associated with the input via for/id,
+    // so use locator chaining: find the label, then the next sibling input.
+    const input = page
+      .locator('div', { has: page.locator('label', { hasText: /business name/i }) })
+      .locator('input')
+      .first();
+    await expect(input).toBeVisible({ timeout: 10000 });
 
-    if (
-      await businessNameInput
-        .first()
-        .isVisible({ timeout: 10000 })
-        .catch(() => false)
-    ) {
-      const input = businessNameInput.first();
+    // Wait for the field to be populated from the API (initial value is
+    // empty until /business returns).
+    await expect(input).not.toHaveValue('', { timeout: 10000 });
+    const currentValue = await input.inputValue();
+    expect(currentValue.length).toBeGreaterThan(0);
 
-      // Verify the field has a value (existing business name)
-      const currentValue = await input.inputValue();
-      expect(currentValue.length).toBeGreaterThan(0);
+    // Verify the field is editable by clearing and typing
+    await input.clear();
+    await input.fill('Test Business Name');
+    await expect(input).toHaveValue('Test Business Name');
 
-      // Verify the field is editable by clearing and typing
-      await input.clear();
-      await input.fill('Test Business Name');
-      await expect(input).toHaveValue('Test Business Name');
-
-      // Restore original value to avoid side effects
-      await input.clear();
-      await input.fill(currentValue);
-    }
+    // Restore original value to avoid side effects
+    await input.clear();
+    await input.fill(currentValue);
   });
 
   test('save button exists on settings page', async ({ authenticatedPage }) => {

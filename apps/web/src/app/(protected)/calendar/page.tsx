@@ -563,22 +563,27 @@ export default function CalendarPage() {
           </h1>
           <div className="flex items-center gap-1">
             <button
+              type="button"
               onClick={() => navigate(-1)}
+              aria-label="Previous"
               className="p-1 hover:bg-slate-100 rounded-lg transition-colors"
             >
-              <ChevronLeft size={20} />
+              <ChevronLeft size={20} aria-hidden="true" />
             </button>
             <button
+              type="button"
               onClick={() => setCurrentDate(new Date())}
               className="px-3 py-1 border border-slate-200 rounded-xl text-sm hover:bg-slate-50 transition-colors"
             >
               {t('calendar.today')}
             </button>
             <button
+              type="button"
               onClick={() => navigate(1)}
+              aria-label="Next"
               className="p-1 hover:bg-slate-100 rounded-lg transition-colors"
             >
-              <ChevronRight size={20} />
+              <ChevronRight size={20} aria-hidden="true" />
             </button>
           </div>
           <h2 className="text-lg text-slate-500">
@@ -714,9 +719,12 @@ export default function CalendarPage() {
             'flex-1 bg-white rounded-2xl shadow-soft overflow-auto',
             sidebarOpen && 'rounded-r-none',
           )}
+          tabIndex={0}
+          role="region"
+          aria-label="Calendar view"
         >
-          {/* Calendar grid */}
-          <div className="flex-1 bg-white rounded-2xl shadow-soft overflow-auto">
+          {/* Calendar grid (inner content — outer wrapper is the scroll container) */}
+          <div className="flex-1 bg-white rounded-2xl shadow-soft">
             {view === 'month' ? (
               /* MONTH VIEW: 6x7 grid */
               <div className="p-4">

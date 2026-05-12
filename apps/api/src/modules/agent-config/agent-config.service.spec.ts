@@ -40,7 +40,11 @@ describe('AgentConfigService', () => {
         where: {
           businessId: 'biz1',
           agentType: {
-            notIn: expect.arrayContaining(['BlogWriter', 'SocialCreator', 'ContentROI']),
+            notIn: expect.arrayContaining([
+              'MKT_BLOG_WRITER',
+              'MKT_SOCIAL_CREATOR',
+              'MKT_ROI_REPORTER',
+            ]),
           },
         },
         orderBy: { agentType: 'asc' },
@@ -69,9 +73,11 @@ describe('AgentConfigService', () => {
     });
 
     it('throws ForbiddenException for marketing agent types', async () => {
-      await expect(service.findOne('biz1', 'BlogWriter')).rejects.toThrow(ForbiddenException);
-      await expect(service.findOne('biz1', 'SocialCreator')).rejects.toThrow(ForbiddenException);
-      await expect(service.findOne('biz1', 'ContentROI')).rejects.toThrow(ForbiddenException);
+      await expect(service.findOne('biz1', 'MKT_BLOG_WRITER')).rejects.toThrow(ForbiddenException);
+      await expect(service.findOne('biz1', 'MKT_SOCIAL_CREATOR')).rejects.toThrow(
+        ForbiddenException,
+      );
+      await expect(service.findOne('biz1', 'MKT_ROI_REPORTER')).rejects.toThrow(ForbiddenException);
     });
 
     it('throws NotFoundException when not found', async () => {
@@ -161,7 +167,7 @@ describe('AgentConfigService', () => {
         expect.objectContaining({
           where: expect.objectContaining({
             agentType: {
-              notIn: expect.arrayContaining(['BlogWriter', 'SocialCreator']),
+              notIn: expect.arrayContaining(['MKT_BLOG_WRITER', 'MKT_SOCIAL_CREATOR']),
             },
           }),
         }),

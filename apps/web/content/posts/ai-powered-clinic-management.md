@@ -26,3 +26,7 @@ Beyond day-to-day operations, AI provides clinics with predictive insights. Whic
 The key to successful AI adoption is starting with tools that integrate into your existing workflow rather than replacing it entirely. Look for platforms that offer gradual AI features you can enable at your own pace, with clear visibility into what the AI is doing on your behalf.
 
 The clinics that embrace AI today will be the ones setting the standard for patient experience tomorrow.
+
+---
+
+Business Command Centre is the AI Front Desk for medical spas — capturing Instagram, WhatsApp, and website leads, drafting replies for staff approval, and proving recovered revenue. [Apply for Pilot](/pilot).

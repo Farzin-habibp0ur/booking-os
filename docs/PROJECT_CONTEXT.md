@@ -1,31 +1,87 @@
 # Business Command Centre — Complete Project Context
 
-> **Purpose:** This document gives full context on the Business Command Centre platform — what it is, what's been built, how it's structured, and what's left to build. Share this with an AI assistant or new developer to get productive immediately.
+> **Purpose:** This document gives full context on the Business Command Centre platform — what it is now (post-pivot), who it's for, what's been built, and what's coming. Share it with an AI assistant or new contributor to get productive immediately.
 >
-> **Last updated:** March 23, 2026 (All phases COMPLETE — A through E + Phases 1-4 & 6 polish + QA Fixes + Sprints 1-4 + Prompts 4A-4C + Prompt 1C + Prompt 1A + Prompt 1B + Prompt 1D + Prompt 2A + Prompt 2B + Prompt 2C + Prompt 3A + Prompt 3C + QA Bug Fix Sprint (10 bugs) + Growth Engine Agents (15 prompts) + Marketing Command Center Phases 1-6 (14 prompts) COMPLETE + Admin Console Extraction (4 phases — scaffold, migrate, remove from web, infrastructure) + Internal/External Separation (3 phases — marketing tools removed from customer app, migrated to admin app, API endpoints gated behind SUPER_ADMIN) + Launch QA fixes (SUPER_ADMIN guards, AutonomyConfig scope constraint, test timeouts) + Omnichannel Phases 0-5 COMPLETE + Omnichannel Gap Fix (16 issues) + Inbox UX v3 (13 prompts) + **AI Agent Integration Fix (10 prompts)** + **Phase 2 Go-Live Configuration (Sessions 4-6)** + **Phase 2-3 Post-Audit (Sessions 4-9)** — queue processors complete (8/8), CI security hardened (Trivy blocking, npm audit split), rate limiting expanded (34+ controllers), web chat file upload implemented, email domain DNS validation, Capacitor mobile app (iOS/Android), push notifications (FCM + DeviceToken), mobile CI/CD pipeline — 6 channels fully implemented (WhatsApp, Instagram, Facebook, SMS, Email, Web Chat) — 96 Prisma models, 70 migrations, 7039 tests)
+> **Last updated:** May 9, 2026 (post AI Front Desk wedge pivot — Phases 0-7 of `BCC-PIVOT-MASTER-PLAN.md` shipped)
 
 ---
 
 ## 1. What Is Business Command Centre?
 
-Business Command Centre is a **multi-tenant SaaS platform** for service-based businesses to manage appointments, customer messaging, and operations — with AI-powered automation via Claude.
+**Business Command Centre (BCC)** is the company. **AI Front Desk** is the first product.
 
-**Live production URL:** https://businesscommandcentre.com
-**API URL:** https://api.businesscommandcentre.com/api/v1
+AI Front Desk is the wedge: a multi-tenant SaaS that captures Instagram, WhatsApp, and website leads for medical spas, drafts replies for staff approval, fills cancellations from the waitlist, follows up on consults and quotes, and proves **revenue captured + bookings that would have been missed** in a single two-metric dashboard.
+
+> **Wedge promise:** Turn missed clinic messages into booked appointments — and prove it on the dashboard every week.
+
+- **Primary headline:** Turn missed clinic messages into booked appointments.
+- **Primary CTA (everywhere customer-facing):** **Apply for Pilot**.
+- **Live production:** https://businesscommandcentre.com
+- **API:** https://api.businesscommandcentre.com/api/v1
+- **Internal names preserved:** the repo, npm packages (`@booking-os/*`), Postgres database names, and legacy Stripe IDs still use "booking-os" — do not rename them. Customer-facing surfaces use **Business Command Centre** and **AI Front Desk**.
+
+### Future products (not yet built)
+
+- **AI Marketing Manager** — Product #2. Distinct from AI Front Desk; planned for after the wedge converts paying clinics. The 12 in-app marketing agents in `apps/api/src/modules/marketing-agent/` are the embryo of this product, kept dormant (`AgentConfig.isEnabled=false`) until a marketing hire and 5+ paying clinics. See [`docs/AI-AGENT-ARCHITECTURE.md`](AI-AGENT-ARCHITECTURE.md) for the Path A vs Path B decision.
 
 ### Demo Credentials
 
-| Business              | Email                     | Password    | Vertical   |
-| --------------------- | ------------------------- | ----------- | ---------- |
-| Glow Aesthetic Clinic | sarah@glowclinic.com      | Bk0s!DemoSecure#2026 | Aesthetic  |
+| Business              | Email                | Password             | Vertical Pack |
+| --------------------- | -------------------- | -------------------- | ------------- |
+| Glow Aesthetic Clinic | sarah@glowclinic.com | Bk0s!DemoSecure#2026 | aesthetic     |
 
-### Supported Verticals
+For the canonical 12-minute wedge demo (missed Instagram DM → AI draft → staff approval → booking → captured + would-have-been-missed dashboard), see [`DEMO_SCRIPT.md`](../DEMO_SCRIPT.md).
 
-- **Aesthetic clinics** — consult → treatment → aftercare workflows, medical intake, before/after tracking
-- **General** — base vertical with standard booking features
-- **Extensible** — Vertical Pack system customizes fields, templates, automations, and workflows per industry
+### Target market — Year 1
 
-### Core Capabilities (All Built & Working)
+AI Front Desk is built for **US and Canada medical spas** with a public Instagram presence. Ideal customer profile:
+
+- **Buyer:** Owner-operator (founder, MD owner, or owner-injector)
+- **Size:** 1–10 locations
+- **Revenue:** $800K–$2.5M annual
+- **Treatment mix:** injectables, laser, body contouring, facials, microneedling, RF/HIFU, IPL — cash-pay aesthetic services
+- **Public Instagram:** active business handle with DMs as a real lead source
+
+**Excluded at launch (Year 1):** clinical dermatology, plastic surgery, cosmetic dentistry, hospital systems, insurance-billed practices, 25+ location chains, PE-backed chains. Practice types we don't yet serve are routed to a Year 2 waitlist via `PilotApplication.status = 'WAITLIST_YEAR_2'`.
+
+**Year 2 expansion order (planned, not built):** hair restoration → IV / wellness / regenerative → cash-pay aesthetic sub-units of dermatology and plastic surgery. Year 2 unlocks after a HIPAA Business Associate Agreement path and PHI minimization audit. See [`docs/COMPLIANCE-POSTURE.md`](COMPLIANCE-POSTURE.md).
+
+### How clinics get in: the 30-day pilot
+
+- **Length:** 30 days, free, concierge mode (founder personally onboards)
+- **Slots:** 5 pilots before continue/kill decision
+- **Success scorecard (all three required):** ≥10 customer messages handled in BCC inbox + ≥5 platform bookings (or ≥ baseline ÷ 12 if the baseline is small) + clinic verbally agrees to continue
+- **Graduation:** $397/mo single-location, $197/mo per added location, 15% annual discount, flat-rate messaging up to 5K/mo
+- Public application form at `/pilot` (rate-limited, honeypot, min-time, consent). Operator playbook in [`docs/PILOT-OPS.md`](PILOT-OPS.md). Sales script in [`docs/PILOT-SALES-SCRIPT.md`](PILOT-SALES-SCRIPT.md).
+
+### Compliance posture
+
+- **Year 1 = non-HIPAA, non-PHI.** Clinical models removed from schema (not just hidden): `MedicalRecord`, `ClinicalPhoto`, `PhotoComparison`, all `Aftercare*` tables. `TreatmentSession.beforePhoto` / `afterPhoto` FKs removed. `TreatmentPlan` retained as service-package metadata only.
+- **Public stance (verbatim):** _"BCC is non-clinical infrastructure. Your PMS remains the system of record for any patient health information."_
+- We do **not** claim HIPAA compliance, do **not** sign Business Associate Agreements, and do **not** advertise "encrypted at rest" for PHI in Year 1. Full claim list and BAA decline script in [`docs/COMPLIANCE-POSTURE.md`](COMPLIANCE-POSTURE.md).
+
+### The two-metric dashboard
+
+The only ROI screen that matters during pilot. Two cards, derived from `FrontDeskAttribution`:
+
+1. **Bookings captured** — every booking that flowed through BCC during the period (revenue dollar = total paid: service + add-ons + tip).
+2. **Bookings that would have been missed without BCC** — the subset whose `attributionReason` is one of `WAITLIST_MATCH`, `AI_BOOKING`, `QUOTE_FOLLOWUP`, `CONSULT_FOLLOWUP`, `AFTER_HOURS_AI`, `UNANSWERED_THRESHOLD`, with `voidedAt IS NULL`. Cancellations and no-shows void the attribution.
+
+Visible to clinic AND BCC. Pre-pilot baseline captured during the concierge call (`Business.baselineMonthlyBookings` / `baselineMonthlyRevenue`). Full contract — the seven attribution reasons, void scenarios, fresh-attribution rules, dashboard methodology — in [`docs/BOOKING-ATTRIBUTION-DEFINITION.md`](BOOKING-ATTRIBUTION-DEFINITION.md). Implementation lives at `apps/api/src/modules/front-desk/front-desk-attribution.service.ts`.
+
+### Three AI systems (do not confuse them)
+
+1. **5 operational agents** (Waitlist, Retention, Data Hygiene, Scheduling Optimizer, Quote Followup) — bundled into the AI Front Desk SKU, customer-facing. Code in `apps/api/src/modules/agent-framework/`.
+2. **15 file-based marketing prompts** in `agents/` — canonical for **BCC's own** marketing operations (we run our own growth engine off these). These are NOT shipped to clinics.
+3. **12 in-app marketing agents** in `apps/api/src/modules/marketing-agent/` — DORMANT (`AgentConfig.isEnabled = false`). Path A keeps file-based primary; Path B (enabling these in-app) triggers when we have 5+ paying clinics AND a marketing hire. They will eventually become the **AI Marketing Manager** product.
+
+Operator playbook for the file-based engine (Path A) lives in [`docs/BCC-MARKETING-OPERATOR-WORKFLOW.md`](BCC-MARKETING-OPERATOR-WORKFLOW.md). Architecture decision in [`docs/AI-AGENT-ARCHITECTURE.md`](AI-AGENT-ARCHITECTURE.md).
+
+### Vertical pack
+
+The platform's `VerticalPack` enum is now `AESTHETIC` only. The `GENERAL` pack was removed in pivot Phase 2. All seed data uses `verticalPack: 'aesthetic'`. The pack system is retained as a customization layer (services, intake fields, templates, automations) — not as a multi-vertical strategy.
+
+### Core capabilities (all built & working)
 
 - **Appointment scheduling** — Calendar views (day/week/month), conflict detection, recurring bookings, automated reminders, force-book with reason, drag-and-drop reschedule with recommended slots, calendar command center (sidebar summary, keyboard shortcuts, booking popover)
 - **Omnichannel messaging inbox** — 6-channel support (WhatsApp, Instagram DM, Facebook Messenger, Email, SMS, Web Chat), real-time via Socket.io, AI auto-replies, conversation management (assign, snooze, tag, close), media attachments (images/docs/audio), delivery/read receipts for all 6 channels, presence indicators, scheduled messages (BullMQ delayed jobs with cancel), bulk actions (close/assign/tag/mark-read up to 50 at once), channel badge + reply channel switcher (with disabled channels + default selection) + channel filter bar (with unread badges) + conversation context bar (messaging window countdown, email subject, SMS opt-in), circuit breaker protection on all outbound sends, usage tracking with Stripe metered billing, customer merge across channels, inline add-email/phone with format validation
@@ -385,7 +441,7 @@ BookingStatus:      PENDING, PENDING_DEPOSIT, CONFIRMED, IN_PROGRESS, COMPLETED,
 BookingSource:      MANUAL, PORTAL, WHATSAPP, AI, REFERRAL, WALK_IN
 ConversationStatus: OPEN, WAITING, RESOLVED, SNOOZED
 ServiceKind:        CONSULT, TREATMENT, OTHER
-VerticalPack:       AESTHETIC, SALON, TUTORING, GENERAL
+VerticalPack:       AESTHETIC (only — GENERAL/SALON/TUTORING removed in pivot Phase 2)
 ```
 
 ### Key Models
@@ -468,8 +524,8 @@ All endpoints prefixed with `/api/v1`. Swagger docs at `/api/docs` (dev only).
 | **Availability**      | `/availability`                                                                   | Available slots (by date, service, staff, location, resource), calendar context (working hours + time off), recommended slots (top 5 scored)                                                                                                                          |
 | **Search**            | `/search`                                                                         | Global search with offset, types filter, totals                                                                                                                                                                                                                       |
 | **Automations**       | `/automations`                                                                    | Playbooks toggle (8 built-in), rules CRUD, test/dry-run, activity log + CSV export, analytics (overview/timeline/by-rule), conflict detection, 9 trigger types, 10 action types                                                                                       |
-| **Campaigns**         | `/campaigns`                                                                      | CRUD, audience preview, send, clone, test send, cost estimate, channel selection (WhatsApp/SMS/Email/Multi), channel stats, conversion funnel, recurring schedules, stop recurrence, unsubscribe (public token-based)                                                  |
-| **Testimonials**      | `/testimonials`                                                                   | CRUD, approve/reject/feature (max 6 with auto-demotion), bulk actions, search/sort, request (email with submission link), dashboard stats, public self-submission portal (token-based), public listing by slug, automated reminders                                    |
+| **Campaigns**         | `/campaigns`                                                                      | CRUD, audience preview, send, clone, test send, cost estimate, channel selection (WhatsApp/SMS/Email/Multi), channel stats, conversion funnel, recurring schedules, stop recurrence, unsubscribe (public token-based)                                                 |
+| **Testimonials**      | `/testimonials`                                                                   | CRUD, approve/reject/feature (max 6 with auto-demotion), bulk actions, search/sort, request (email with submission link), dashboard stats, public self-submission portal (token-based), public listing by slug, automated reminders                                   |
 | **Offers**            | `/offers`                                                                         | CRUD, redeem                                                                                                                                                                                                                                                          |
 | **Quotes**            | `/quotes`                                                                         | Create, view, per-booking                                                                                                                                                                                                                                             |
 | **Waitlist**          | `/waitlist`                                                                       | List, update, cancel, resolve, bulk (remove/resolve)                                                                                                                                                                                                                  |
@@ -511,7 +567,7 @@ All endpoints prefixed with `/api/v1`. Swagger docs at `/api/docs` (dev only).
 | **Email Sequences**   | `/email-sequences`                                                                | Email drip campaigns: CRUD, stats, enroll, enrollments, cancel/pause/resume, seed (12 endpoints). 7 default sequences                                                                                                                                                 |
 | **Portal**            | `/portal`                                                                         | Customer self-service portal: OTP auth (WhatsApp), magic link auth (email), profile, bookings (paginated), upcoming, cancel & reschedule with policy checks. OTP/blacklist backed by Redis with in-memory fallback. PortalGuard with portal JWT (24h, type: 'portal') |
 | **Export**            | `/customers/export`, `/bookings/export`, `/staff/export`, `/reports/:type/export` | CSV/PDF export for customers, bookings, staff, and all 10 report types                                                                                                                                                                                                |
-| **Device Token**      | `/device-tokens`                                                                  | Push notification device registration: register (POST), unregister (DELETE). Upsert by staff+token unique. JWT + TenantGuard protected. @Throttle(10/60s)                                                                                                            |
+| **Device Token**      | `/device-tokens`                                                                  | Push notification device registration: register (POST), unregister (DELETE). Upsert by staff+token unique. JWT + TenantGuard protected. @Throttle(10/60s)                                                                                                             |
 | **Push Notification** | — (internal)                                                                      | FCM HTTP v1 push notifications to iOS/Android. Sends to staff or business tokens. Graceful degradation when FCM unconfigured (logs only). Auto-deactivates invalid/stale tokens                                                                                       |
 
 ### Auth & Multi-tenancy
@@ -685,13 +741,14 @@ All nav route definitions live in `apps/web/src/lib/nav-config.ts` (single sourc
 
 **Desktop sidebar** — 4 sections (Workspace / Tools / Insights / AI & Agents) per mode via `mode-config.ts`. Admin mode splits each section into **primary** (always visible) and **overflow** (under a collapsible "More" toggle, `aria-expanded`, collapsed by default, persisted in `localStorage`). Agent and provider modes show all paths as primary (no overflow toggle). Only routes defined in the active mode's sections are rendered — items outside the mode's allowlist are hidden (not dumped into an unsectioned block). The only exception is `/admin/*` paths for SUPER_ADMIN users.
 
-| Mode | Primary Tools | Overflow Tools | Primary Insights | Overflow Insights | Primary AI | Overflow AI |
-|------|--------------|---------------|-----------------|-------------------|-----------|------------|
-| Admin | services, staff, invoices | campaigns, automations, testimonials | dashboard, reports | monthly-review, roi | /ai | actions, agents, performance |
-| Agent | services | — | dashboard, reports | — | — | — |
-| Provider | services | — | dashboard | — | — | — |
+| Mode     | Primary Tools             | Overflow Tools                       | Primary Insights   | Overflow Insights   | Primary AI | Overflow AI                  |
+| -------- | ------------------------- | ------------------------------------ | ------------------ | ------------------- | ---------- | ---------------------------- |
+| Admin    | services, staff, invoices | campaigns, automations, testimonials | dashboard, reports | monthly-review, roi | /ai        | actions, agents, performance |
+| Agent    | services                  | —                                    | dashboard, reports | —                   | —          | —                            |
+| Provider | services                  | —                                    | dashboard          | —                   | —          | —                            |
 
 **Mobile tab bar** — mode + role aware, max 4 link tabs + "More" button:
+
 - Admin/Agent: Inbox, Calendar, Customers, Home
 - Provider: Calendar, Bookings, Home (no Inbox/Customers)
 - Labels are i18n/pack-aware (e.g. "Clients" for aesthetic, "Customers" for general)
@@ -763,8 +820,8 @@ Pull request → lint-and-test → docker-build + e2e-test (no deploy, no smoke 
 
 ### Railway Production
 
-| Property   | Value                                  |
-| ---------- | -------------------------------------- |
+| Property     | Value                                  |
+| ------------ | -------------------------------------- |
 | Project ID   | `37eeca20-7dfe-45d9-8d29-e902a545f475` |
 | API domain   | `api.businesscommandcentre.com`        |
 | Web domain   | `businesscommandcentre.com`            |
@@ -792,13 +849,13 @@ Multiple scripts, all idempotent:
 
 **`packages/db/src/seed-console.ts`** — Platform Console base data:
 
-- Creates "Booking OS Platform" business (slug: `platform`, verticalPack: `general`)
+- Creates "Business Command Centre Platform" business (slug: `platform`, verticalPack: `aesthetic`)
 - Creates Super Admin staff: `admin@businesscommandcentre.com` / `superadmin123`
 - Idempotent (checks before inserting)
 
 **`packages/db/src/seed-console-showcase.ts`** — Console showcase data:
 
-- Creates 6 diverse businesses with varied health states (green/yellow/red), plans (basic/pro), billing statuses (active/past_due/canceled), verticals (general/aesthetic), and timezones
+- Creates 6 diverse businesses with varied health states (green/yellow/red), plans (basic/pro), billing statuses (active/past_due/canceled), all on the `aesthetic` vertical pack, in varied timezones
 - Each business gets staff, customers, services, bookings, conversations, subscriptions
 - Used to populate the Business Directory with realistic data for demos
 
@@ -866,6 +923,30 @@ Key groups (full list in `.env.example`):
 
 ## 14. Roadmap — What's Next
 
+> **Post-pivot orientation (May 2026):** The platform's go-to-market is now the AI Front Desk wedge for medical spas. The roadmap below captures (a) the pivot work currently in flight, (b) what's deferred until the wedge proves itself, and (c) historical milestones already shipped.
+
+### AI Front Desk Pivot — IN FLIGHT
+
+Tracking doc: [`BCC-PIVOT-MASTER-PLAN.md`](../BCC-PIVOT-MASTER-PLAN.md) (v3). 12 phases. Phases 0–7 shipped; phases 8–12 follow. Highlights:
+
+- **Phase 1** — Schema additions: `Business.businessHours`, `Business.baseline*`, `FrontDeskAttribution.{attributionReason, wouldHaveBeenMissed, voidedAt, revenueAtBooking}`, `PilotApplication.practiceType` + `WAITLIST_YEAR_2` status.
+- **Phase 2** — Cleanup: `GENERAL` vertical pack removed; clinical Prisma models removed (`MedicalRecord`, `ClinicalPhoto`, `PhotoComparison`, all `Aftercare*`); `TreatmentSession.beforePhoto`/`afterPhoto` FKs dropped; agent-config legacy filter list updated to `MKT_*` IDs.
+- **Phase 3** — Pilot acceptance flow: admin `Accept and Provision` button creates Business + Owner Staff + password-setup token in a single transaction; non-MED_SPA applications go to Year 2 waitlist; baseline + pilot-health admin pages.
+- **Phase 4** — Two-metric attribution moved from outbound (AI-draft hook) to booking-creation hook; `FrontDeskAttributionService.{createForBooking, voidForBooking, getSummary}`; 7-reason determination logic; dashboard reshaped to two-card layout.
+- **Phase 5** — Public marketing: `practiceType` required on pilot form, `DEMO_SCRIPT.md` rewritten as 12-minute wedge demo, 7 service-business blog posts deleted.
+- **Phase 6** — In-app rebrand: nav reordered (Inbox / AI Front Desk / Calendar / Waitlist / Customers / Bookings primary), AI setup wizard verified against 5-step concierge spec, install prompt suppressed, locale sweeps.
+- **Phase 7** — Tier 1 doc rewrites: this file, [`DESIGN_DOCUMENTATION.md`](../DESIGN_DOCUMENTATION.md) product overview, [`docs/SALES-DEMO-PLAN.md`](SALES-DEMO-PLAN.md), [`agents/outbound-prospecting.md`](../agents/outbound-prospecting.md).
+
+### Deferred until past first 5 paying clinics
+
+- **Capacitor mobile app** — install prompt suppressed; `useCapacitor` and `usePushNotifications` hooks remain in code but mobile builds aren't a launch blocker.
+- **In-app marketing agents (Path B)** — 12 agents in `apps/api/src/modules/marketing-agent/` are dormant. Path B trigger: 5+ paying clinics + a marketing hire.
+- **HIPAA / BAA path** — Year 2 unlock. Conditions in [`docs/COMPLIANCE-POSTURE.md`](COMPLIANCE-POSTURE.md).
+- **Multi-vertical expansion** — Hair restoration, IV / wellness, cash-pay aesthetic sub-units of derm / plastics. Order tracked in the locked decisions of `BCC-PIVOT-MASTER-PLAN.md`.
+- **Onboarding / dunning email rewrite** — Phase 10 ships a brand-and-signoff sweep only; full rewrite for the AI Front Desk wedge is deferred.
+- **AI Marketing Manager (product #2)** — distinct product, not yet built. The 12 dormant agents are its embryo.
+- **Campaigns** — gated behind `business.campaignsEnabled` (default off during pilot).
+
 ### Agentic-First Transformation (5 Milestones) — ALL COMPLETE & DEPLOYED TO PRODUCTION
 
 - **Milestone 1: Agentic Foundations & Trust Rails** — COMPLETE (commit d8be527). 4 new models (ActionCard, ActionHistory, AutonomyConfig, OutboundDraft), 4 new API modules, 14 new frontend components, /settings/autonomy page. +170 tests.
@@ -890,15 +971,6 @@ Fixed 7 critical integration gaps between the AI pipeline, messaging infrastruct
 - **Prompt 9:** AI × Inbox UX — Draft-to-composer integration, channel-switch regenerate prompt, AI draft in quick replies, confidence indicators
 - **Prompt 10:** QA (55-item checklist PASS) — 229 test suites, 4104 tests passing (now 4150 with admin + billing health tests)
 - **Files changed:** 26 files, ~1940 insertions. New files: `action-card-executor.service.ts`, migration `20260321000000_add_ai_fields_to_outbound_draft`
-
-### Phase 5: Engagement OS + Benchmarking + Marketplace (NOT STARTED)
-
-| Item                           | Description                                                                                |
-| ------------------------------ | ------------------------------------------------------------------------------------------ |
-| **Benchmarking & Coaching**    | Anonymized peer benchmarks by vertical + region, "what top performers do" recommendations  |
-| **Omnichannel Inbox**          | WhatsApp, Instagram DM, Facebook Messenger, SMS, Email, Web Chat — ALL 6 CHANNELS COMPLETE |
-| **Vertical Packs Marketplace** | Partner portal, revenue share                                                              |
-| **Customer Mini-Portal**       | Booking management, receipts, referrals                                                    |
 
 ### UX Improvements
 
@@ -1170,28 +1242,30 @@ Fixed 7 critical integration gaps between the AI pipeline, messaging infrastruct
 
 ### Do Not Build (Yet)
 
-- Don't chase additional verticals beyond aesthetic and general before ROI is repeatable
-- Don't overinvest in generic AI chatbot; keep AI tied to structured flows
-- Don't build deep enterprise features before pack-led implementation is nailed
+- Don't chase verticals beyond med spas (Year 1) before the AI Front Desk wedge converts paying clinics. Year 2 expansion order is locked in `BCC-PIVOT-MASTER-PLAN.md`.
+- Don't overinvest in a generic AI chatbot; keep AI tied to structured flows (the 5 operational agents + booking/cancel/reschedule assistants).
+- Don't build deep enterprise features before owner-operated 1–10 location clinics are converting at the $397/$197 graduation price.
+- Don't enable the 12 in-app marketing agents until Path B trigger conditions are met (5+ paying clinics + a marketing hire).
+- Don't make HIPAA / BAA / "encrypted at rest" claims in customer-facing copy. Year 1 stance is non-clinical infrastructure. See [`docs/COMPLIANCE-POSTURE.md`](COMPLIANCE-POSTURE.md).
 
 ---
 
 ## 15. Key Documentation
 
-| Document                         | Path                               | Purpose                                                    |
-| -------------------------------- | ---------------------------------- | ---------------------------------------------------------- |
-| Design system + deployment rules | `CLAUDE.md`                        | Active project guidelines for AI assistants                |
-| Deployment & operations          | `DEPLOY.md`                        | Railway, Docker, cookies, troubleshooting                  |
-| Stripe setup guide               | `docs/STRIPE-SETUP.md`            | Stripe dashboard config, products, prices, webhooks        |
-| Channel setup guide              | `docs/CHANNEL-SETUP.md`           | All 6 channels: env vars, webhook URLs, priority order     |
-| URLs & services                  | `docs/URLS.md`                     | All domains, services, DNS, third-party dashboards         |
-| CI/CD pipeline                   | `docs/cicd.md`                     | Pipeline details and Railway config                        |
-| User stories                     | `docs/user-stories.md`             | 280 can-do + 215 gaps by feature area                      |
-| UX brainstorm brief              | `docs/ux-brainstorm-brief.md`      | Self-contained brief for LLM brainstorming                 |
-| Messaging failure runbook        | `docs/runbooks/MESSAGING-FAILURE.md` | Troubleshooting messaging issues                         |
-| This file                        | `docs/PROJECT_CONTEXT.md`          | Full project context                                       |
-| Env template                     | `.env.example`                     | All environment variables                                  |
-| Production env                   | `.env.production`                  | Production env template                                    |
+| Document                         | Path                                 | Purpose                                                |
+| -------------------------------- | ------------------------------------ | ------------------------------------------------------ |
+| Design system + deployment rules | `CLAUDE.md`                          | Active project guidelines for AI assistants            |
+| Deployment & operations          | `DEPLOY.md`                          | Railway, Docker, cookies, troubleshooting              |
+| Stripe setup guide               | `docs/STRIPE-SETUP.md`               | Stripe dashboard config, products, prices, webhooks    |
+| Channel setup guide              | `docs/CHANNEL-SETUP.md`              | All 6 channels: env vars, webhook URLs, priority order |
+| URLs & services                  | `docs/URLS.md`                       | All domains, services, DNS, third-party dashboards     |
+| CI/CD pipeline                   | `docs/cicd.md`                       | Pipeline details and Railway config                    |
+| User stories                     | `docs/user-stories.md`               | 280 can-do + 215 gaps by feature area                  |
+| UX brainstorm brief              | `docs/ux-brainstorm-brief.md`        | Self-contained brief for LLM brainstorming             |
+| Messaging failure runbook        | `docs/runbooks/MESSAGING-FAILURE.md` | Troubleshooting messaging issues                       |
+| This file                        | `docs/PROJECT_CONTEXT.md`            | Full project context                                   |
+| Env template                     | `.env.example`                       | All environment variables                              |
+| Production env                   | `.env.production`                    | Production env template                                |
 
 ---
 

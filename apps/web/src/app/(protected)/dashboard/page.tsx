@@ -910,10 +910,12 @@ export default function DashboardPage() {
                     </button>
                   </div>
                   <button
+                    type="button"
                     onClick={() => handleDismissNudge(milestone.currentNudge.id)}
+                    aria-label="Dismiss nudge"
                     className="text-lavender-400 hover:text-lavender-600 transition-colors shrink-0 mt-0.5"
                   >
-                    <X size={16} />
+                    <X size={16} aria-hidden="true" />
                   </button>
                 </div>
               )}

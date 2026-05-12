@@ -72,10 +72,7 @@ import { TestimonialsModule } from './modules/testimonials/testimonials.module';
 import { PortalModule } from './modules/portal/portal.module';
 import { BusinessReviewModule } from './modules/business-review/business-review.module';
 import { InvoiceModule } from './modules/invoice/invoice.module';
-import { MedicalRecordModule } from './modules/medical-record/medical-record.module';
-import { ClinicalPhotoModule } from './modules/clinical-photo/clinical-photo.module';
 import { TreatmentPlanModule } from './modules/treatment-plan/treatment-plan.module';
-import { AftercareModule } from './modules/aftercare/aftercare.module';
 import { PlatformConfigModule } from './modules/platform-config/platform-config.module';
 import { BudgetTrackerModule } from './modules/budget-tracker/budget-tracker.module';
 import { AutonomySettingsModule } from './modules/autonomy-settings/autonomy-settings.module';
@@ -176,10 +173,7 @@ import { FrontDeskModule } from './modules/front-desk/front-desk.module';
     PortalModule,
     BusinessReviewModule,
     InvoiceModule,
-    MedicalRecordModule,
-    ClinicalPhotoModule,
     TreatmentPlanModule,
-    AftercareModule,
     PlatformConfigModule,
     BudgetTrackerModule,
     AutonomySettingsModule,

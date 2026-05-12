@@ -65,11 +65,17 @@ export function ModeProvider({ children }: { children: ReactNode }) {
   const [mode, setModeState] = useState<AppMode>(getInitialMode);
   const [modeReady, setModeReady] = useState(false);
 
-  // Re-derive mode if user changes (e.g. login/logout)
+  // Re-derive mode if user changes (e.g. login/logout).
+  // Do not mark mode as ready until the user is actually loaded — otherwise
+  // we briefly run with mode='agent' (the default for null role) and the
+  // shell's redirect effect can fire incorrectly, e.g. routing /ai → /inbox
+  // for an admin landing on a deep link before auth completes.
   useEffect(() => {
     const initial = getInitialMode();
     setModeState(initial);
-    setModeReady(true);
+    if (user) {
+      setModeReady(true);
+    }
   }, [user?.id, user?.role]);
 
   // Debounced API call ref

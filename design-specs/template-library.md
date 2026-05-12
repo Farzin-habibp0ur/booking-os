@@ -1,4 +1,4 @@
-# BookingOS Visual Template Library
+# Business Command Centre Visual Template Library
 
 > Last updated: 2026-03-12
 > Purpose: Reusable design templates for consistent brand visuals across all platforms.
@@ -30,7 +30,7 @@
 - **Dimensions:** 1080 × 1080 px (1:1)
 - **Use for:** Quick tips, single insights, stat highlights
 - **Layout:** Sage gradient top half → white bottom half, large text center
-- **Elements:** Tip number badge (lavender circle), headline (Playfair 32px), 1-line explanation (Inter 16px), BookingOS logo (bottom right, 24px)
+- **Elements:** Tip number badge (lavender circle), headline (Playfair 32px), 1-line explanation (Inter 16px), Business Command Centre logo (bottom right, 24px)
 - **Text limit:** Headline 8 words max, body 15 words max
 
 ### IG-002: Feature Carousel
@@ -39,7 +39,7 @@
 - **Slides:** Cover + 3-7 content slides + CTA slide
 - **Layout:** White background, screenshot center (60% width), text top/bottom
 - **Elements:** Slide number (top left, sage circle), feature name (Playfair 28px), screenshot with rounded corners (16px), brief explanation (Inter 14px)
-- **Cover slide:** Large title, "Swipe →" indicator, BookingOS logo
+- **Cover slide:** Large title, "Swipe →" indicator, Business Command Centre logo
 - **CTA slide:** CTA text (Inter Semibold 20px), URL, sage button graphic
 
 ### IG-003: Stat Card
@@ -61,7 +61,7 @@
 - **Dimensions:** 1080 × 1080 px (1:1)
 - **Use for:** Customer quotes, founder insights, industry wisdom
 - **Layout:** Large quotation mark (lavender-200), quote text center (Playfair Italic 24px), attribution below (Inter 14px)
-- **Elements:** Quote marks, quote text, attribution name + title, BookingOS logo
+- **Elements:** Quote marks, quote text, attribution name + title, Business Command Centre logo
 
 ---
 
@@ -72,7 +72,7 @@
 - **Dimensions:** 1080 × 1920 px (9:16)
 - **Use for:** First frame of any TikTok — text hook
 - **Layout:** Large bold text center, contrasting background (dark overlay or sage gradient)
-- **Elements:** Hook text (Inter Bold 48px, white, max 6 words), subtle BookingOS watermark (bottom right, 12px, 30% opacity)
+- **Elements:** Hook text (Inter Bold 48px, white, max 6 words), subtle Business Command Centre watermark (bottom right, 12px, 30% opacity)
 
 ### TK-002: Step-by-Step Overlay
 
@@ -86,7 +86,7 @@
 - **Dimensions:** 1080 × 1920 px (9:16)
 - **Use for:** Last frame — CTA
 - **Layout:** Sage gradient background, centered text, URL
-- **Elements:** CTA text (Playfair Bold 36px, white), URL (Inter 20px, white), BookingOS logo (centered, 48px)
+- **Elements:** CTA text (Playfair Bold 36px, white), URL (Inter 20px, white), Business Command Centre logo (centered, 48px)
 
 ---
 
@@ -99,7 +99,7 @@
 - **Layout:** Clean white background, sage accent bar left (8px wide), numbered pages
 - **Elements:** Page number (top right, Inter 12px), headline (Playfair 28px), body text (Inter 16px), visual element (chart/icon/screenshot)
 - **Cover slide:** Title + subtitle + "Swipe →" + author name
-- **Last slide:** CTA + BookingOS logo + URL
+- **Last slide:** CTA + Business Command Centre logo + URL
 
 ### LI-002: Data Visualization
 
@@ -117,7 +117,7 @@
 - **Dimensions:** 1200 × 630 px (OG image compatible)
 - **Use for:** Blog post hero image, social sharing preview
 - **Layout:** Sage-to-lavender diagonal gradient, title text overlay
-- **Elements:** Title (Playfair Bold 36px, white, center), subtitle (Inter 18px, white, 80% opacity), BookingOS logo (bottom right)
+- **Elements:** Title (Playfair Bold 36px, white, center), subtitle (Inter 18px, white, 80% opacity), Business Command Centre logo (bottom right)
 
 ### BG-002: In-Article Screenshot
 
@@ -130,10 +130,10 @@
 
 ## Usage Notes
 
-- All templates use the BookingOS brand colors — never substitute
-- Screenshots must be from the actual BookingOS UI (use demo accounts)
+- All templates use the Business Command Centre brand colors — never substitute
+- Screenshots must be from the actual Business Command Centre UI (use demo accounts)
 - Export at 2x resolution for retina displays
-- Always include the BookingOS logo on the final slide/frame
+- Always include the Business Command Centre logo on the final slide/frame
 - Respect `prefers-reduced-motion` — no auto-playing animations in static templates
 
 ---

@@ -1,4 +1,4 @@
-import { Controller, Get, Param, Query, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Param, Patch, Query, UseGuards } from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
 import { ApiTags } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
@@ -67,6 +67,53 @@ export class ConsoleBusinessesController {
       targetId: id,
     });
 
+    return result;
+  }
+
+  @Get(':id/baseline')
+  async getBaseline(@Param('id') id: string, @CurrentUser() user: { sub: string; email: string }) {
+    const result = await this.businessesService.getBaseline(id);
+    this.auditService.log(user.sub, user.email, 'BUSINESS_BASELINE_LOOKUP', {
+      targetType: 'BUSINESS',
+      targetId: id,
+    });
+    return result;
+  }
+
+  @Patch(':id/baseline')
+  async updateBaseline(
+    @Param('id') id: string,
+    @Body()
+    body: {
+      monthlyBookings?: number | null;
+      monthlyRevenue?: number | string | null;
+      capturedAt?: string | null;
+      notes?: string | null;
+    },
+    @CurrentUser() user: { sub: string; email: string },
+  ) {
+    const result = await this.businessesService.updateBaseline(id, body);
+    this.auditService.log(user.sub, user.email, 'BUSINESS_BASELINE_UPDATE', {
+      targetType: 'BUSINESS',
+      targetId: id,
+      metadata: {
+        monthlyBookings: body.monthlyBookings ?? null,
+        monthlyRevenue: body.monthlyRevenue ?? null,
+      },
+    });
+    return result;
+  }
+
+  @Get(':id/pilot-health')
+  async getPilotHealth(
+    @Param('id') id: string,
+    @CurrentUser() user: { sub: string; email: string },
+  ) {
+    const result = await this.businessesService.getPilotHealth(id);
+    this.auditService.log(user.sub, user.email, 'BUSINESS_PILOT_HEALTH_LOOKUP', {
+      targetType: 'BUSINESS',
+      targetId: id,
+    });
     return result;
   }
 }

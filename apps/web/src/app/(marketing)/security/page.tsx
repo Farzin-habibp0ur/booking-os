@@ -66,8 +66,10 @@ export default function SecurityPage() {
         <h2 className="font-serif text-2xl font-bold text-slate-900">Pilot boundaries</h2>
         <div className="mt-5 space-y-4 text-sm leading-relaxed text-slate-600">
           <p>
-            Business Command Centre is not marketed as an EMR, diagnosis system, treatment
-            recommendation tool, or regulated clinical decision-support product.
+            Business Command Centre is non-clinical infrastructure. Your PMS remains the system of
+            record for any patient health information. We do not market the pilot as HIPAA, BAA, or
+            PHIPA compliant, and the pilot is not an EMR, diagnosis system, treatment recommendation
+            tool, or regulated clinical decision-support product.
           </p>
           <p>
             Security and compliance needs vary by clinic, region, connected channel, and customer

@@ -8,6 +8,7 @@ import { BusinessService } from '../business/business.service';
 import { CalendarSyncService } from '../calendar-sync/calendar-sync.service';
 import { TokenService } from '../../common/token.service';
 import { WaitlistService } from '../waitlist/waitlist.service';
+import { FrontDeskAttributionService } from '../front-desk/front-desk-attribution.service';
 import {
   createMockPrisma,
   createMockNotificationService,
@@ -26,6 +27,12 @@ describe('BookingService', () => {
   let mockCalendarSyncService: ReturnType<typeof createMockCalendarSyncService>;
   let mockTokenService: ReturnType<typeof createMockTokenService>;
   let mockConfigService: ReturnType<typeof createMockConfigService>;
+  let mockFrontDeskAttributionService: {
+    createForBooking: jest.Mock;
+    voidForBooking: jest.Mock;
+    unvoidForBooking: jest.Mock;
+    getSummary: jest.Mock;
+  };
 
   beforeAll(() => {
     jest.useFakeTimers();
@@ -43,6 +50,12 @@ describe('BookingService', () => {
     mockCalendarSyncService = createMockCalendarSyncService();
     mockTokenService = createMockTokenService();
     mockConfigService = createMockConfigService();
+    mockFrontDeskAttributionService = {
+      createForBooking: jest.fn().mockResolvedValue(undefined),
+      voidForBooking: jest.fn().mockResolvedValue(undefined),
+      unvoidForBooking: jest.fn().mockResolvedValue(undefined),
+      getSummary: jest.fn().mockResolvedValue({}),
+    };
 
     const module = await Test.createTestingModule({
       providers: [
@@ -53,6 +66,10 @@ describe('BookingService', () => {
         { provide: CalendarSyncService, useValue: mockCalendarSyncService },
         { provide: TokenService, useValue: mockTokenService },
         { provide: ConfigService, useValue: mockConfigService },
+        {
+          provide: FrontDeskAttributionService,
+          useValue: mockFrontDeskAttributionService,
+        },
       ],
     }).compile();
 
@@ -855,6 +872,43 @@ describe('BookingService', () => {
           data: expect.objectContaining({ source: 'AI' }),
         }),
       );
+    });
+
+    // Phase 4 (BCC v3): booking-creation hook -> FrontDeskAttributionService
+    it('calls FrontDeskAttributionService.createForBooking after the booking insert', async () => {
+      prisma.service.findFirst.mockResolvedValue({
+        id: 'svc1',
+        durationMins: 60,
+        depositRequired: false,
+      } as any);
+      prisma.booking.findFirst.mockResolvedValue(null);
+      prisma.booking.create.mockResolvedValue({ id: 'b1', conversationId: 'conv1' } as any);
+      prisma.reminder.create.mockResolvedValue({} as any);
+
+      await bookingService.create('biz1', { ...createData, conversationId: 'conv1' });
+
+      expect(mockFrontDeskAttributionService.createForBooking).toHaveBeenCalledTimes(1);
+      const call = mockFrontDeskAttributionService.createForBooking.mock.calls[0];
+      expect(call[0]).toBeDefined(); // tx client
+      expect(call[1]).toEqual(expect.objectContaining({ id: 'b1' }));
+      expect(call[2]).toEqual(expect.objectContaining({ conversationId: 'conv1' }));
+    });
+
+    it('does not break booking creation when attribution service throws', async () => {
+      mockFrontDeskAttributionService.createForBooking.mockRejectedValue(new Error('boom'));
+      prisma.service.findFirst.mockResolvedValue({
+        id: 'svc1',
+        durationMins: 60,
+        depositRequired: false,
+      } as any);
+      prisma.booking.findFirst.mockResolvedValue(null);
+      prisma.booking.create.mockResolvedValue({ id: 'b1' } as any);
+      prisma.reminder.create.mockResolvedValue({} as any);
+
+      const booking = await bookingService.create('biz1', createData);
+
+      expect(booking).toEqual(expect.objectContaining({ id: 'b1' }));
+      expect(mockFrontDeskAttributionService.createForBooking).toHaveBeenCalled();
     });
   });
 
@@ -1884,6 +1938,43 @@ describe('BookingService', () => {
       const expectedMax = after + 24 * 3600000;
       expect(scheduledAt.getTime()).toBeGreaterThanOrEqual(expectedMin);
       expect(scheduledAt.getTime()).toBeLessThanOrEqual(expectedMax);
+    });
+
+    // Phase 4 (BCC v3): void v3 attribution row on terminal-failure transitions
+    it('voids the FrontDeskAttribution row when transitioning to CANCELLED', async () => {
+      prisma.booking.findFirst.mockResolvedValue({ status: 'CONFIRMED' } as any);
+      prisma.booking.update.mockResolvedValue({ id: 'b1', status: 'CANCELLED' } as any);
+      prisma.reminder.updateMany.mockResolvedValue({ count: 0 } as any);
+
+      await bookingService.updateStatus('biz1', 'b1', 'CANCELLED');
+
+      expect(mockFrontDeskAttributionService.voidForBooking).toHaveBeenCalledTimes(1);
+      const args = mockFrontDeskAttributionService.voidForBooking.mock.calls[0];
+      expect(args[1]).toBe('b1');
+      // First arg is the prisma transaction client (mock proxy) — must be defined.
+      expect(args[0]).toBeDefined();
+    });
+
+    it('voids the FrontDeskAttribution row when transitioning to NO_SHOW', async () => {
+      prisma.booking.findFirst.mockResolvedValue({ status: 'CONFIRMED' } as any);
+      prisma.booking.update.mockResolvedValue({ id: 'b1', status: 'NO_SHOW' } as any);
+      prisma.reminder.updateMany.mockResolvedValue({ count: 0 } as any);
+
+      await bookingService.updateStatus('biz1', 'b1', 'NO_SHOW');
+
+      expect(mockFrontDeskAttributionService.voidForBooking).toHaveBeenCalledTimes(1);
+      const args = mockFrontDeskAttributionService.voidForBooking.mock.calls[0];
+      expect(args[1]).toBe('b1');
+      expect(args[0]).toBeDefined();
+    });
+
+    it('does not void attribution on non-terminal transitions (PENDING -> CONFIRMED)', async () => {
+      prisma.booking.findFirst.mockResolvedValue({ status: 'PENDING' } as any);
+      prisma.booking.update.mockResolvedValue({ id: 'b1', status: 'CONFIRMED' } as any);
+
+      await bookingService.updateStatus('biz1', 'b1', 'CONFIRMED');
+
+      expect(mockFrontDeskAttributionService.voidForBooking).not.toHaveBeenCalled();
     });
   });
 

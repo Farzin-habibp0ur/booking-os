@@ -1,15 +1,16 @@
 <!-- Version: 2.0 | Last optimized: 2026-04-03 | Target: <800 lines -->
 
-# Booking OS — Project Guidelines
+# Business Command Centre — Project Guidelines
 
 ## What This Project Is
 
-Booking OS is a **multi-tenant SaaS platform** for service-based businesses (aesthetic clinics) to manage appointments, customer messaging, and operations — with AI-powered automation via Claude.
+Business Command Centre (BCC) is a **multi-tenant SaaS platform** for owner-operated medical spas (US/Canada, 1–10 locations, $800K–$2.5M revenue) to manage appointments, customer messaging, and operations — with AI-powered automation via Claude. The wedge product is **AI Front Desk** for med spas; the public CTA is **Apply for Pilot** at `/pilot`.
 
 - **Live production:** https://businesscommandcentre.com
 - **API:** https://api.businesscommandcentre.com/api/v1
 - **Verticals:** Aesthetic (primary), General (fallback)
-- **Target users:** Small to mid-size service businesses (1-20 staff) — owners, receptionists, service providers, and their end customers
+- **Target users:** Owner-operated US/Canada med spas (1–10 locations) — owners, receptionists, service providers, and their end customers
+- **Internal repo name:** `booking-os` (kept for back-compat — internal package paths `@booking-os/*` are unchanged)
 
 ### Demo Credentials
 
@@ -231,7 +232,7 @@ Key events: `message:new`, `conversation:updated`, `ai:suggestions`, `ai:auto-re
 
 ### Omnichannel Messaging
 
-BookingOS supports 6 channels: WhatsApp, Instagram DM, Facebook Messenger, SMS, Email, Web Chat. All fully implemented.
+Business Command Centre supports 6 channels: WhatsApp, Instagram DM, Facebook Messenger, SMS, Email, Web Chat. All fully implemented.
 - Customer identity resolution: `CustomerIdentityService` (phone → email → social IDs)
 - Circuit breaker on all outbound calls: `CircuitBreakerService`
 - All webhooks verify provider signatures (HMAC-SHA256/SHA1, timing-safe comparison)

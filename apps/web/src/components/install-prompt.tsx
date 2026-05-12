@@ -10,6 +10,12 @@ interface BeforeInstallPromptEvent extends Event {
   userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>;
 }
 
+// Capacitor mobile deferred per BCC-PIVOT-MASTER-PLAN.md (v3) Phase 6
+// The PWA install prompt is intentionally suppressed during the AI Front Desk pilot.
+// The hook-based logic below is preserved (not deleted) so it can be re-enabled
+// by flipping `INSTALL_PROMPT_DISABLED` to false when mobile resumes.
+const INSTALL_PROMPT_DISABLED = true;
+
 export function InstallPrompt() {
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [showBanner, setShowBanner] = useState(false);
@@ -55,6 +61,8 @@ export function InstallPrompt() {
     localStorage.setItem(DISMISSED_KEY, '1');
   }, []);
 
+  // Capacitor mobile deferred per BCC-PIVOT-MASTER-PLAN.md (v3) Phase 6
+  if (INSTALL_PROMPT_DISABLED) return null;
   if (!showBanner) return null;
 
   return (

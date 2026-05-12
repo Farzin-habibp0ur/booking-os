@@ -72,5 +72,4 @@ export enum ServiceKind {
 
 export enum VerticalPack {
   AESTHETIC = 'aesthetic',
-  GENERAL = 'general',
 }

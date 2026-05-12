@@ -56,7 +56,7 @@ jest.mock('@/lib/auth', () => ({
         id: 'b1',
         name: 'Glow Clinic',
         slug: 'glow',
-        verticalPack: 'general',
+        verticalPack: 'aesthetic',
         defaultLocale: 'en',
         packConfig: {},
       },
@@ -80,7 +80,7 @@ jest.mock('@/lib/i18n', () => ({
 
 jest.mock('@/lib/vertical-pack', () => ({
   usePack: () => ({
-    name: 'general',
+    name: 'aesthetic',
     labels: { customer: 'Customer', booking: 'Booking', service: 'Service' },
   }),
   VerticalPackProvider: ({ children }: any) => children,
@@ -144,11 +144,11 @@ jest.mock('@/lib/use-mode', () => ({
     modeDef: {
       key: 'admin',
       sections: {
-        workspace: ['/dashboard', '/inbox', '/calendar', '/customers', '/bookings', '/waitlist'],
-        tools: ['/services', '/marketing', '/campaigns', '/service-board'],
-        insights: ['/reports', '/reports/monthly-review', '/roi'],
+        // BCC v3 Phase 6 layout: /ai promoted to workspace, Campaigns/Marketing/Invoices in tools overflow
+        workspace: ['/inbox', '/ai', '/calendar', '/waitlist', '/customers', '/bookings'],
+        tools: ['/services', '/staff', '/campaigns', '/marketing', '/invoices'],
+        insights: ['/dashboard', '/reports', '/reports/monthly-review', '/roi'],
         aiAgents: [
-          '/ai',
           '/ai/agents',
           '/ai/actions',
           '/ai/automations',
@@ -156,8 +156,8 @@ jest.mock('@/lib/use-mode', () => ({
           '/ai/performance',
         ],
         overflow: {
-          tools: [],
-          insights: ['/reports/monthly-review', '/roi'],
+          tools: ['/campaigns', '/marketing', '/invoices'],
+          insights: ['/reports', '/reports/monthly-review', '/roi'],
           aiAgents: [
             '/ai/agents',
             '/ai/actions',
@@ -215,7 +215,7 @@ describe('Shell', () => {
     expect(screen.getByTestId('mode-switcher')).toBeInTheDocument();
   });
 
-  it('renders workspace nav items for admin mode', () => {
+  it('renders workspace + insights nav items for admin mode', () => {
     render(
       <Shell>
         <div>Content</div>
@@ -223,10 +223,11 @@ describe('Shell', () => {
     );
 
     const nav = screen.getByRole('navigation', { name: 'Main navigation' });
-    // Workspace section items: Dashboard, Inbox, Calendar, Customers, Bookings
-    expect(within(nav).getByText('nav.dashboard')).toBeInTheDocument();
+    // Workspace primary (Phase 6): Inbox, AI Front Desk, Calendar, Waitlist, Customers, Bookings
     expect(within(nav).getByText('nav.inbox')).toBeInTheDocument();
     expect(within(nav).getByText('nav.calendar')).toBeInTheDocument();
+    // Insights primary: Dashboard
+    expect(within(nav).getByText('nav.dashboard')).toBeInTheDocument();
   });
 
   it('shows "More" button in mobile tab bar', () => {
@@ -306,7 +307,7 @@ describe('Shell', () => {
     expect(screen.getAllByText('Glow Clinic').length).toBeGreaterThan(0);
   });
 
-  it('renders section labels for workspace, tools, insights, and ai agents', () => {
+  it('renders section labels for workspace, tools, and insights (Phase 6 — AI Front Desk in workspace)', () => {
     render(
       <Shell>
         <div>Content</div>
@@ -318,6 +319,22 @@ describe('Shell', () => {
     expect(within(nav).getByText('nav.section_workspace')).toBeInTheDocument();
     expect(within(nav).getByText('nav.section_tools')).toBeInTheDocument();
     expect(within(nav).getByText('nav.section_insights')).toBeInTheDocument();
+    // Phase 6: aiAgents primary section is empty (/ai promoted to workspace);
+    // sub-routes only appear under "More". The "AI Front Desk" header label
+    // moves into overflow alongside its items.
+    expect(within(nav).queryByText('nav.section_ai_agents')).not.toBeInTheDocument();
+  });
+
+  it('shows the AI Front Desk overflow header when "More" is expanded', async () => {
+    render(
+      <Shell>
+        <div>Content</div>
+      </Shell>,
+    );
+
+    await userEvent.click(screen.getByTestId('sidebar-more-toggle'));
+
+    const nav = screen.getByRole('navigation', { name: 'Main navigation' });
     expect(within(nav).getByText('nav.section_ai_agents')).toBeInTheDocument();
   });
 
@@ -386,13 +403,14 @@ describe('Shell', () => {
 
     const nav = screen.getByRole('navigation', { name: 'Main navigation' });
 
-    // Marketing should be in primary nav (not overflow)
-    expect(within(nav).getByText('nav.marketing')).toBeInTheDocument();
+    // Marketing should NOT be in primary nav (Phase 6 moved it to overflow)
+    expect(within(nav).queryByText('nav.marketing')).not.toBeInTheDocument();
 
-    // Click More to expand — overflow sections still have insights/AI items
+    // Click More to expand — Marketing now appears in overflow
     await userEvent.click(screen.getByTestId('sidebar-more-toggle'));
 
     expect(screen.getByTestId('sidebar-overflow-items')).toBeInTheDocument();
+    expect(within(nav).getByText('nav.marketing')).toBeInTheDocument();
   });
 
   it('does not render marketing nav links (Content Queue, Marketing Agents, etc.)', () => {
@@ -454,7 +472,7 @@ describe('Shell', () => {
     expect(nav.className).toContain('overflow-y-auto');
   });
 
-  it('renders primary nav items in tools, insights, and AI sections', () => {
+  it('renders primary nav items in workspace, tools, insights, and AI sections (Phase 6)', () => {
     render(
       <Shell>
         <div>Content</div>
@@ -462,14 +480,28 @@ describe('Shell', () => {
     );
 
     const nav = screen.getByRole('navigation', { name: 'Main navigation' });
+    // Primary WORKSPACE items (Phase 6: Inbox + AI Front Desk + Calendar + Waitlist + Customers + Bookings)
+    expect(within(nav).getByText('nav.inbox')).toBeInTheDocument();
+    expect(within(nav).getByText('nav.ai')).toBeInTheDocument();
     // Primary TOOLS items (not overflow)
     expect(within(nav).getByText('nav.services')).toBeInTheDocument();
-    // Primary INSIGHTS item
-    expect(within(nav).getByText('nav.reports')).toBeInTheDocument();
-    // Primary AI item (t() returns key)
-    expect(within(nav).getByText('nav.ai')).toBeInTheDocument();
-    // Marketing should be in primary tools
-    expect(within(nav).getByText('nav.marketing')).toBeInTheDocument();
+    // Primary INSIGHTS item: dashboard only (reports moved to overflow)
+    expect(within(nav).getByText('nav.dashboard')).toBeInTheDocument();
+    // Reports is overflow, not primary
+    expect(within(nav).queryByText('nav.reports')).not.toBeInTheDocument();
+    // Marketing is overflow now
+    expect(within(nav).queryByText('nav.marketing')).not.toBeInTheDocument();
+  });
+
+  it('hides Campaigns from nav when business.campaignsEnabled !== true (default during pilot)', () => {
+    render(
+      <Shell>
+        <div>Content</div>
+      </Shell>,
+    );
+
+    const nav = screen.getByRole('navigation', { name: 'Main navigation' });
+    expect(within(nav).queryByText('nav.campaigns')).not.toBeInTheDocument();
   });
 
   it('sidebar footer stays outside scrollable nav', () => {

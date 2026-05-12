@@ -1,4 +1,4 @@
-# BookingOS Growth Engine — Monthly Budget
+# Business Command Centre Growth Engine — Monthly Budget
 
 > Last updated: 2026-03-12
 > Purpose: Track all growth engine spending, ROI by channel, and enforce budget rules.

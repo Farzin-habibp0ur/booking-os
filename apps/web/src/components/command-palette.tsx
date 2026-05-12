@@ -186,10 +186,15 @@ export default function CommandPalette({
   // Build page items from shared nav config, filtered by role
   const pageItems: PageItem[] = useMemo(() => {
     const role = user?.role;
+    const businessPackConfig = (user?.business as Record<string, unknown> | undefined)
+      ?.packConfig as Record<string, unknown> | null | undefined;
+    const featureFlags = (businessPackConfig?.featureFlags ?? {}) as Record<string, unknown>;
+    const campaignsEnabled = featureFlags?.campaignsEnabled === true;
     const navItems = getNavItems({
       t,
       packName: pack.name,
       packLabels: pack.labels,
+      business: { campaignsEnabled },
     });
 
     const sections = modeDef?.sections;

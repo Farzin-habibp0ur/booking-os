@@ -1403,6 +1403,7 @@ function InboxPage() {
                     <div className="flex items-start gap-2">
                       <input
                         type="checkbox"
+                        aria-label={`Select conversation with ${c.customer?.name || 'customer'}`}
                         checked={selectedConvoIds.has(c.id)}
                         onChange={(e) => {
                           e.stopPropagation();

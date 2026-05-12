@@ -1039,6 +1039,18 @@ This checks all critical environment variables and connectivity. The full checkl
 - [ ] SSL certificates valid (check via browser or `curl -vI https://businesscommandcentre.com`)
 - [ ] Cookie auth verified: `curl -D - -X POST https://api.businesscommandcentre.com/api/v1/auth/login ...`
 
+### AI Front Desk pilot launch (BCC-PIVOT-MASTER-PLAN.md v3 Phase 10)
+
+- [ ] DKIM + SPF verified for `businesscommandcentre.com` (use `dig txt _dkim._domainkey.businesscommandcentre.com` and `dig txt businesscommandcentre.com`)
+- [ ] Stripe products created (4 prices) and env vars updated:
+  - `STRIPE_PRICE_ID_AIFD_MONTHLY` ($397/mo)
+  - `STRIPE_PRICE_ID_AIFD_ANNUAL` ($4,050/yr)
+  - `STRIPE_PRICE_ID_AIFD_ADDL_LOC_MONTHLY` ($197/mo per added loc)
+  - `STRIPE_PRICE_ID_AIFD_ADDL_LOC_ANNUAL` (~$2,008/yr per added loc)
+- [ ] First pilot graduation tested manually via Stripe Checkout
+- [ ] `EMAIL_FROM` set to `Business Command Centre <hello@businesscommandcentre.com>`
+- [ ] `PILOT_APPLICATION_NOTIFY_EMAIL` set to `farz@businesscommandcentre.com`
+
 ### Operational Runbooks
 
 Incident response runbooks are in `docs/runbooks/`:

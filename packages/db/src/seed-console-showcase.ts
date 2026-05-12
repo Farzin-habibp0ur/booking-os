@@ -21,7 +21,7 @@ async function main() {
   let platformBiz = await prisma.business.findFirst({ where: { slug: 'platform' } });
   if (!platformBiz) {
     platformBiz = await prisma.business.create({
-      data: { name: 'Booking OS Platform', slug: 'platform', verticalPack: 'general' },
+      data: { name: 'Booking OS Platform', slug: 'platform', verticalPack: 'aesthetic' },
     });
     console.log('✓ Created platform business:', platformBiz.id);
   } else {
@@ -56,7 +56,7 @@ async function main() {
       name: 'Bright Smile Dental',
       phone: '+14155550202',
       timezone: 'America/Chicago',
-      verticalPack: 'general',
+      verticalPack: 'aesthetic',
       plan: 'pro',
       billingStatus: 'active',
       staffCount: 6,
@@ -69,7 +69,7 @@ async function main() {
       name: 'Elite Barbershop',
       phone: '+14155550203',
       timezone: 'America/Los_Angeles',
-      verticalPack: 'general',
+      verticalPack: 'aesthetic',
       plan: 'basic',
       billingStatus: 'active',
       staffCount: 3,
@@ -82,7 +82,7 @@ async function main() {
       name: 'Paws & Claws Pet Grooming',
       phone: '+14155550204',
       timezone: 'Europe/London',
-      verticalPack: 'general',
+      verticalPack: 'aesthetic',
       plan: 'basic',
       billingStatus: 'past_due',
       staffCount: 2,
@@ -95,7 +95,7 @@ async function main() {
       name: 'Harmony Yoga Studio',
       phone: '+14155550205',
       timezone: 'Asia/Tokyo',
-      verticalPack: 'general',
+      verticalPack: 'aesthetic',
       plan: 'basic',
       billingStatus: 'canceled',
       staffCount: 2,

@@ -891,49 +891,6 @@ describe('BusinessService', () => {
       expect(prisma.service.createMany).not.toHaveBeenCalled();
     });
 
-    it('installs general pack with minimal defaults', async () => {
-      prisma.messageTemplate.count.mockResolvedValue(2);
-      prisma.service.count.mockResolvedValue(1);
-      prisma.service.createMany.mockResolvedValue({ count: 1 });
-      prisma.messageTemplate.createMany.mockResolvedValue({ count: 2 });
-
-      const result = await service.installPack(businessId, 'general');
-
-      // Sets verticalPack to general
-      expect(prisma.business.update).toHaveBeenCalledWith(
-        expect.objectContaining({
-          where: { id: businessId },
-          data: { verticalPack: 'general' },
-        }),
-      );
-
-      // Creates 2 templates (reminder + confirmation)
-      expect(prisma.messageTemplate.createMany).toHaveBeenCalledWith(
-        expect.objectContaining({
-          data: expect.arrayContaining([
-            expect.objectContaining({ businessId, name: '24h Reminder', category: 'REMINDER' }),
-            expect.objectContaining({
-              businessId,
-              name: 'Booking Confirmation',
-              category: 'CONFIRMATION',
-            }),
-          ]),
-        }),
-      );
-
-      // Creates 1 service
-      expect(prisma.service.createMany).toHaveBeenCalledWith(
-        expect.objectContaining({
-          data: expect.arrayContaining([
-            expect.objectContaining({ businessId, name: 'General Appointment', kind: 'OTHER' }),
-          ]),
-        }),
-      );
-
-      expect(result.installed.templates).toBe(2);
-      expect(result.installed.services).toBe(1);
-    });
-
     it('throws BadRequestException for unknown pack', async () => {
       await expect(service.installPack(businessId, 'unknown')).rejects.toThrow(BadRequestException);
     });

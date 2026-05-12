@@ -155,6 +155,7 @@ function ShellInner({ children }: { children: ReactNode }) {
       pathname === '/' ||
       pathname.startsWith('/settings') ||
       pathname.startsWith('/admin/') ||
+      pathname.startsWith('/setup') ||
       allowed.has(pathname) ||
       [...allowed].some((p) => pathname.startsWith(p + '/'));
     if (!isAllowed) {
@@ -194,10 +195,19 @@ function ShellInner({ children }: { children: ReactNode }) {
 
   const role = user?.role;
 
+  // Read campaignsEnabled feature flag from packConfig.featureFlags (default false during pilot)
+  const businessPackConfig = (user?.business as Record<string, unknown> | undefined)?.packConfig as
+    | Record<string, unknown>
+    | null
+    | undefined;
+  const featureFlags = (businessPackConfig?.featureFlags ?? {}) as Record<string, unknown>;
+  const campaignsEnabled = featureFlags?.campaignsEnabled === true;
+
   const allNav = getNavItems({
     t,
     packName: pack.name,
     packLabels: pack.labels,
+    business: { campaignsEnabled },
   });
 
   const nav = allNav.filter((item) => !role || item.roles.includes(role));

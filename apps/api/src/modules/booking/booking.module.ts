@@ -9,8 +9,8 @@ import { AuthModule } from '../auth/auth.module';
 import { WaitlistModule } from '../waitlist/waitlist.module';
 import { InvoiceModule } from '../invoice/invoice.module';
 import { TreatmentPlanModule } from '../treatment-plan/treatment-plan.module';
-import { AftercareModule } from '../aftercare/aftercare.module';
 import { ReferralModule } from '../referral/referral.module';
+import { FrontDeskModule } from '../front-desk/front-desk.module';
 
 @Module({
   imports: [
@@ -20,8 +20,8 @@ import { ReferralModule } from '../referral/referral.module';
     forwardRef(() => WaitlistModule),
     InvoiceModule,
     TreatmentPlanModule,
-    AftercareModule,
     ReferralModule,
+    FrontDeskModule,
   ],
   controllers: [RecurringController, BookingController],
   providers: [BookingService, RecurringService],

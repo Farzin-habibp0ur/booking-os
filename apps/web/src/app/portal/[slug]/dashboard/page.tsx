@@ -6,7 +6,6 @@ import { Calendar, Clock, User, MessageSquare, X, ClipboardList, FileText } from
 import { cn } from '@/lib/cn';
 import { statusBadgeClasses } from '@/lib/design-tokens';
 import { PageSkeleton } from '@/components/skeleton';
-import { AftercarePortalView } from '@/components/aesthetic/aftercare-portal-view';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/v1';
 
@@ -57,7 +56,6 @@ export default function PortalDashboardPage() {
   const [actionError, setActionError] = useState('');
   const [treatmentPlans, setTreatmentPlans] = useState<any[]>([]);
   const [acceptingPlan, setAcceptingPlan] = useState<string | null>(null);
-  const [aftercareEnrollments, setAftercareEnrollments] = useState<any[]>([]);
 
   const loadData = useCallback(() => {
     return Promise.all([
@@ -65,14 +63,12 @@ export default function PortalDashboardPage() {
       portalFetch('/portal/upcoming'),
       portalFetch('/portal/bookings?page=1'),
       portalFetch('/portal/treatment-plans').catch(() => []),
-      portalFetch('/portal/aftercare').catch(() => []),
     ])
-      .then(([prof, up, bookings, plans, aftercare]) => {
+      .then(([prof, up, bookings, plans]) => {
         setProfile(prof);
         setUpcoming(up);
         setRecentBookings(bookings.data?.slice(0, 5) || []);
         setTreatmentPlans(Array.isArray(plans) ? plans : []);
-        setAftercareEnrollments(Array.isArray(aftercare) ? aftercare : []);
       })
       .catch(() => {});
   }, []);
@@ -273,14 +269,6 @@ export default function PortalDashboardPage() {
                 </div>
               ))}
           </div>
-        </section>
-      )}
-
-      {/* Active Aftercare */}
-      {aftercareEnrollments.length > 0 && (
-        <section data-testid="portal-aftercare">
-          <h2 className="text-lg font-serif font-semibold text-slate-900 mb-3">Active Aftercare</h2>
-          <AftercarePortalView enrollments={aftercareEnrollments} />
         </section>
       )}
 

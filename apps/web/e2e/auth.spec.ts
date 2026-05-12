@@ -26,9 +26,10 @@ base.describe('Authentication — unauthenticated flows', () => {
     await page.locator('input[type="password"]').fill('wrongpassword123');
     await page.locator('button[type="submit"]').click();
 
-    // Error message should appear — look for red-styled error or text
+    // Error message should appear — look for red-styled error or matching text
     const errorVisible = await page
-      .locator('.bg-red-50, [role="alert"], text=/invalid|incorrect|error|failed/i')
+      .locator('.bg-red-50, [role="alert"]')
+      .or(page.getByText(/invalid|incorrect|error|failed/i))
       .first()
       .isVisible({ timeout: 10000 })
       .catch(() => false);

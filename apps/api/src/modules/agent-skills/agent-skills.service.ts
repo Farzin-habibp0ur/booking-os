@@ -48,43 +48,6 @@ export const PACK_SKILLS: Record<string, AgentSkillDefinition[]> = {
       defaultEnabled: true,
     },
   ],
-  general: [
-    {
-      agentType: 'WAITLIST',
-      name: 'Waitlist Matching',
-      description: 'Matches waitlisted customers with available slots',
-      category: 'proactive',
-      defaultEnabled: true,
-    },
-    {
-      agentType: 'RETENTION',
-      name: 'Customer Retention',
-      description: 'Detects customers who may be overdue for their next visit',
-      category: 'proactive',
-      defaultEnabled: false,
-    },
-    {
-      agentType: 'DATA_HYGIENE',
-      name: 'Duplicate Detection',
-      description: 'Identifies potential duplicate customer records',
-      category: 'maintenance',
-      defaultEnabled: false,
-    },
-    {
-      agentType: 'SCHEDULING_OPTIMIZER',
-      name: 'Schedule Optimization',
-      description: 'Finds gaps in staff schedules and suggests fill opportunities',
-      category: 'proactive',
-      defaultEnabled: false,
-    },
-    {
-      agentType: 'QUOTE_FOLLOWUP',
-      name: 'Quote Follow-up',
-      description: 'Tracks pending quotes and suggests follow-up',
-      category: 'reactive',
-      defaultEnabled: false,
-    },
-  ],
 };
 
 @Injectable()
@@ -94,7 +57,7 @@ export class AgentSkillsService {
   constructor(private prisma: PrismaService) {}
 
   getSkillsForPack(pack: string): AgentSkillDefinition[] {
-    return PACK_SKILLS[pack] || PACK_SKILLS.general || [];
+    return PACK_SKILLS[pack] || PACK_SKILLS.aesthetic || [];
   }
 
   getAllPackSkills(): Record<string, AgentSkillDefinition[]> {
@@ -109,7 +72,7 @@ export class AgentSkillsService {
 
     if (!business) throw new NotFoundException('Business not found');
 
-    const packSkills = this.getSkillsForPack(business.verticalPack || 'general');
+    const packSkills = this.getSkillsForPack(business.verticalPack || 'aesthetic');
 
     // Get existing agent configs for this business
     const configs = await this.prisma.agentConfig.findMany({
@@ -138,7 +101,7 @@ export class AgentSkillsService {
 
     if (!business) throw new NotFoundException('Business not found');
 
-    const packSkills = this.getSkillsForPack(business.verticalPack || 'general');
+    const packSkills = this.getSkillsForPack(business.verticalPack || 'aesthetic');
     const skill = packSkills.find((s) => s.agentType === agentType);
     if (!skill) throw new NotFoundException(`Skill ${agentType} not available for this pack`);
 

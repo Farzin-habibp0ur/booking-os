@@ -20,29 +20,21 @@ describe('ConsoleSkillsService', () => {
 
   describe('getCatalog', () => {
     it('returns skills grouped by pack with adoption stats', async () => {
-      // Business counts for each pack (aesthetic, general)
-      prisma.business.count
-        .mockResolvedValueOnce(5) // aesthetic
-        .mockResolvedValueOnce(2); // general
+      // Business counts for the aesthetic pack
+      prisma.business.count.mockResolvedValueOnce(5); // aesthetic
 
-      // Agent config counts for each skill in each pack
+      // Agent config counts for each skill in aesthetic
       // aesthetic: 5 skills
       prisma.agentConfig.count
         .mockResolvedValueOnce(4) // WAITLIST enabled on aesthetic
         .mockResolvedValueOnce(3) // RETENTION
         .mockResolvedValueOnce(1) // DATA_HYGIENE
         .mockResolvedValueOnce(5) // SCHEDULING_OPTIMIZER
-        .mockResolvedValueOnce(2) // QUOTE_FOLLOWUP
-        // general: 5 skills
-        .mockResolvedValueOnce(1)
-        .mockResolvedValueOnce(0)
-        .mockResolvedValueOnce(0)
-        .mockResolvedValueOnce(1)
-        .mockResolvedValueOnce(0);
+        .mockResolvedValueOnce(2); // QUOTE_FOLLOWUP
 
       const result = await service.getCatalog();
 
-      expect(result.packs).toHaveLength(2);
+      expect(result.packs).toHaveLength(1);
       expect(result.packs[0].slug).toBe('aesthetic');
       expect(result.packs[0].skills).toHaveLength(5);
       expect(result.packs[0].skills[0].agentType).toBe('WAITLIST');
@@ -56,7 +48,7 @@ describe('ConsoleSkillsService', () => {
 
       const result = await service.getCatalog();
 
-      expect(result.packs).toHaveLength(2);
+      expect(result.packs).toHaveLength(1);
       for (const pack of result.packs) {
         for (const skill of pack.skills) {
           expect(skill.enabledCount).toBe(0);
@@ -106,7 +98,7 @@ describe('ConsoleSkillsService', () => {
             id: 'biz2',
             name: 'Zen Studio',
             slug: 'zen-studio',
-            verticalPack: 'general',
+            verticalPack: 'aesthetic',
           },
         },
       ] as any);

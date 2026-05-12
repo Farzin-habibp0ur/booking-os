@@ -20,13 +20,20 @@ test.describe('Internal/External Boundary', () => {
     await expect(page.locator('text=Budget Allocation')).toHaveCount(0);
   });
 
-  test('customer user accessing /marketing routes gets redirected', async ({ page }) => {
-    // Navigate to /marketing/queue — should redirect to /ai
+  test('customer user cannot access internal marketing routes', async ({ page }) => {
+    // Internal marketing routes (queue, sequences, rejection analytics) live
+    // in the admin app under apps/admin. For a regular ADMIN user on the
+    // customer app, hitting /marketing/queue must NOT render any internal
+    // marketing UI. Since the route does not exist in the customer app, the
+    // expected outcome is a 404 page (no leaked marketing content).
     await page.goto('/marketing/queue');
     await page.waitForLoadState('networkidle');
 
-    // Should end up at /ai (redirect) or see no marketing content
-    await expect(page).toHaveURL(/\/(ai|dashboard)/, { timeout: 15000 });
+    // Should NOT render any internal marketing surfaces
+    const body = (await page.textContent('body')) || '';
+    expect(body).not.toContain('Content Queue');
+    expect(body).not.toContain('Email Sequences');
+    expect(body).not.toContain('Rejection Analytics');
   });
 
   test('/ai/agents page shows only core agents, not marketing agents', async ({ page }) => {
@@ -44,10 +51,10 @@ test.describe('Internal/External Boundary', () => {
       await page.waitForLoadState('networkidle');
     }
 
-    // Wait for page to load
-    await expect(page.locator('[data-testid="agents-page"], text=Core Agents').first()).toBeVisible(
-      { timeout: 15000 },
-    );
+    // Wait for page to load (either the agents-page testid or the "Core Agents" text)
+    await expect(
+      page.locator('[data-testid="agents-page"]').or(page.getByText('Core Agents')).first(),
+    ).toBeVisible({ timeout: 15000 });
 
     // Core agents should be visible (if configured)
     const pageContent = await page.textContent('body');

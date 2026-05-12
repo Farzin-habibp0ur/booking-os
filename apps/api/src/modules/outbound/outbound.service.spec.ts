@@ -69,7 +69,13 @@ describe('OutboundService', () => {
   });
 
   describe('createAiDraft', () => {
-    it('creates an AI draft and an OPEN front-desk attribution row', async () => {
+    // Phase 4 (BCC v3): attribution writes were moved from this service to the
+    // booking-creation hook (FrontDeskAttributionService.createForBooking).
+    // The legacy frontDeskAttribution.create / updateMany call sites in
+    // outbound.service.ts are commented out for one release for safety;
+    // these tests now only verify draft creation.
+
+    it('creates an AI draft (attribution writes are no longer done here)', async () => {
       prisma.outboundDraft.create.mockResolvedValue({
         id: 'draft1',
         status: 'DRAFT',
@@ -101,22 +107,10 @@ describe('OutboundService', () => {
           }),
         }),
       );
-      expect(prisma.frontDeskAttribution.create).toHaveBeenCalledWith({
-        data: expect.objectContaining({
-          businessId: 'biz1',
-          customerId: 'cust1',
-          conversationId: 'conv1',
-          outboundDraftId: 'draft1',
-          source: 'AI_DRAFT',
-          status: 'OPEN',
-          channel: 'WHATSAPP',
-          confidence: 0.91,
-          reason: 'GENERAL_INQUIRY',
-        }),
-      });
+      expect(prisma.frontDeskAttribution.create).not.toHaveBeenCalled();
     });
 
-    it('maps QUOTE_FOLLOWUP / CONSULT_FOLLOWUP intents to CONSULT_FOLLOWUP attribution source', async () => {
+    it('still creates the draft for QUOTE_FOLLOWUP / CONSULT_FOLLOWUP intents (attribution moved)', async () => {
       prisma.outboundDraft.create.mockResolvedValue({
         id: 'draft2',
         status: 'DRAFT',
@@ -135,12 +129,8 @@ describe('OutboundService', () => {
         intent: 'QUOTE_FOLLOWUP',
       });
 
-      expect(prisma.frontDeskAttribution.create).toHaveBeenCalledWith({
-        data: expect.objectContaining({
-          source: 'CONSULT_FOLLOWUP',
-          channel: 'EMAIL',
-        }),
-      });
+      expect(prisma.outboundDraft.create).toHaveBeenCalled();
+      expect(prisma.frontDeskAttribution.create).not.toHaveBeenCalled();
     });
 
     it('does not write a front-desk attribution row for non-AI drafts', async () => {
@@ -285,7 +275,7 @@ describe('OutboundService', () => {
   });
 
   describe('markSent', () => {
-    it('marks draft as sent with conversation link and updates the linked attribution row', async () => {
+    it('marks draft as sent with conversation link (attribution updates moved to booking hook)', async () => {
       prisma.outboundDraft.update.mockResolvedValue({
         id: 'ob1',
         status: 'SENT',
@@ -302,14 +292,9 @@ describe('OutboundService', () => {
           conversationId: 'conv1',
         }),
       });
-      expect(prisma.frontDeskAttribution.updateMany).toHaveBeenCalledWith({
-        where: { businessId: 'biz1', outboundDraftId: 'ob1' },
-        data: expect.objectContaining({
-          status: 'OPEN',
-          conversationId: 'conv1',
-          openedAt: expect.any(Date),
-        }),
-      });
+      // Phase 4: this used to call frontDeskAttribution.updateMany — the v3
+      // booking-creation hook owns attribution now.
+      expect(prisma.frontDeskAttribution.updateMany).not.toHaveBeenCalled();
     });
   });
 });

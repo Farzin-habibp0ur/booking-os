@@ -17,7 +17,7 @@ All content-producing agents MUST reference this file before passing work to the
 
 | #   | Check                                                 | Threshold             | Required |
 | --- | ----------------------------------------------------- | --------------------- | -------- |
-| 1   | Trend relevance score for BookingOS target audience   | >= 7/10               | Yes      |
+| 1   | Trend relevance score for Business Command Centre target audience   | >= 7/10               | Yes      |
 | 2   | Each keyword has verified search volume data attached | Not guessed/estimated | Yes      |
 | 3   | Trends are current                                    | Within last 7 days    | Yes      |
 | 4   | Trends map to content pillars                         | >= 3 of 5 trends      | Yes      |
@@ -34,7 +34,7 @@ All content-producing agents MUST reference this file before passing work to the
 ### Fail Action
 
 > **REJECT** — Return to Trend Scout with note:
-> "Trends [X, Y] failed relevance gate (code: R02/R03/R06). Replace with BookingOS-relevant alternatives."
+> "Trends [X, Y] failed relevance gate (code: R02/R03/R06). Replace with Business Command Centre-relevant alternatives."
 > Use rejection codes from the taxonomy below.
 
 ---
@@ -59,10 +59,10 @@ All content-producing agents MUST reference this file before passing work to the
 
 | Bad (Generic)  | Good (Specific)                                         |
 | -------------- | ------------------------------------------------------- |
-| "Learn more"   | "Start your free 14-day trial"                          |
-| "Check it out" | "See how BookingOS reduces no-shows by 40%"             |
-| "Click here"   | "Book a 10-minute demo with our team"                   |
-| "Sign up"      | "Create your free BookingOS account — no card required" |
+| "Learn more"   | "Apply for the AI Front Desk pilot — businesscommandcentre.com/pilot" |
+| "Check it out" | "See how Business Command Centre reduces no-shows by 40% — apply for the pilot at /pilot" |
+| "Click here"   | "Book a 10-minute pilot fit call with our team"         |
+| "Sign up"      | "Apply for Pilot — limited cohort, owner-operated US/Canada med spas only" |
 
 ### Fail Action
 
@@ -81,7 +81,7 @@ All content-producing agents MUST reference this file before passing work to the
 | #   | Check                             | Threshold                                              | Required |
 | --- | --------------------------------- | ------------------------------------------------------ | -------- |
 | 1   | Word count meets platform minimum | Blog: 800+, Social caption: 50+, Video script: 100+    | Yes      |
-| 2   | BookingOS product mention or CTA  | >= 1 for MOFU/BOFU content (optional for TOFU)         | Yes      |
+| 2   | Business Command Centre product mention or CTA  | >= 1 for MOFU/BOFU content (optional for TOFU)         | Yes      |
 | 3   | No placeholder text remaining     | Zero matches for: [INSERT], TBD, TODO, FIXME, XXX, ??? | Yes      |
 | 4   | Correct tier classification       | GREEN / YELLOW / RED per classification rules below    | Yes      |
 | 5   | File naming convention            | `[DATE]-[TIER]-[PLATFORM]-[LANGUAGE]-[TITLE].md`       | Yes      |
@@ -102,7 +102,7 @@ Format: YYYY-MM-DD-TIER-PLATFORM-LANG-slug-title.md
 
 Examples:
   2026-03-17-GREEN-instagram-en-5-ways-reduce-noshows.md
-  2026-03-18-YELLOW-linkedin-en-bookingos-vs-calendly.md
+  2026-03-18-YELLOW-linkedin-en-bcc-ai-front-desk-vs-calendly.md
   2026-03-19-RED-blog-es-hipaa-compliance-guide.md
 ```
 

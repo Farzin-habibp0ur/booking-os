@@ -4,9 +4,9 @@
 >
 > **All marketing agent management is accessed via `admin.businesscommandcentre.com`** (the admin app). Marketing pages were migrated from the customer app in March 2026. The customer app at `businesscommandcentre.com` shows only the 5 core operational agents. Marketing API endpoints require `SUPER_ADMIN` role.
 >
-> **Not covered here:** BookingOS's own internal growth engine (15 prompt-based agents in `agents/` directory). For that system, see the agent prompt files and `system/quality-gates.md`.
+> **Not covered here:** Business Command Centre's own internal growth engine (15 prompt-based agents in `agents/` directory). For that system, see the agent prompt files and `system/quality-gates.md`.
 
-> A step-by-step guide for BookingOS operators to manage the 12 AI marketing agents throughout the day. Each step specifies **what to do**, **where to do it** (exact page/route on the admin app), and **why it matters**.
+> A step-by-step guide for Business Command Centre operators to manage the 12 AI marketing agents throughout the day. Each step specifies **what to do**, **where to do it** (exact page/route on the admin app), and **why it matters**.
 
 ---
 
@@ -166,7 +166,7 @@ This is the dedicated content review interface with 9 API endpoints for granular
 **Route:** `/marketing/sequences`
 **When:** Midday, as part of the health check
 
-BookingOS comes with 7 default drip campaigns: Welcome, FeatureEducation, SocialProof, TrialExpiry, WinBack, Upgrade, and Referral.
+Business Command Centre comes with 7 default drip campaigns: Welcome, FeatureEducation, SocialProof, TrialExpiry, WinBack, Upgrade, and Referral.
 
 **What to do:**
 
@@ -179,7 +179,7 @@ BookingOS comes with 7 default drip campaigns: Welcome, FeatureEducation, Social
 4. **Expand the timeline** for any sequence to see where customers are in the drip flow and whether there are bottlenecks (e.g., high drop-off at a specific step).
 5. If the EmailComposer agent has suggested new email variants or A/B tests, review them here.
 
-**Why:** Email sequences are a major revenue driver for service businesses. Monitoring ensures customers are getting the right messages at the right time.
+**Why:** Email sequences are a major revenue driver for med spas. Monitoring ensures customers are getting the right messages at the right time.
 
 ---
 

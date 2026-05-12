@@ -42,11 +42,13 @@ export function FeatureDiscovery({ id, title, description }: FeatureDiscoveryPro
         <p className="text-xs text-sage-700 mt-0.5">{description}</p>
       </div>
       <button
+        type="button"
         onClick={handleDismiss}
+        aria-label="Dismiss"
         className="p-1 text-slate-400 hover:text-slate-600 transition-colors shrink-0"
         data-testid="feature-discovery-dismiss"
       >
-        <X size={16} />
+        <X size={16} aria-hidden="true" />
       </button>
     </div>
   );

@@ -399,7 +399,7 @@ MESSAGING_PROVIDER=whatsapp-cloud
 
 ## Messaging Architecture
 
-> This section documents how BookingOS's omnichannel messaging system works internally. For channel *setup*, see the sections above.
+> This section documents how Business Command Centre's omnichannel messaging system works internally. For channel *setup*, see the sections above.
 
 ### Key Services
 

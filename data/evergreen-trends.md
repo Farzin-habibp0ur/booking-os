@@ -22,8 +22,8 @@
 | ------------------------------------------ | ------------ | ---------- | --------------------------------------------------------- | --------------------------------------------- |
 | No-show reduction strategies               | TOFU         | PERENNIAL  | no-show rate, appointment reminders, reduce cancellations | Universal pain point, works for all verticals |
 | Online booking adoption stats              | TOFU         | PERENNIAL  | online booking statistics, appointment scheduling trends  | Update stats annually                         |
-| Automated reminder best practices          | MOFU         | PERENNIAL  | automated appointment reminders, SMS reminders for salons | Show BookingOS reminder setup                 |
-| Waitlist management for service businesses | MOFU         | PERENNIAL  | salon waitlist, spa waitlist management                   | Feature-specific content                      |
+| Automated reminder best practices          | MOFU         | PERENNIAL  | automated appointment reminders, SMS reminders for med spas | Show Business Command Centre reminder setup |
+| Waitlist management for med spas           | MOFU         | PERENNIAL  | med spa waitlist, aesthetic clinic waitlist management    | Feature-specific content                      |
 | Calendar optimization for multi-staff      | BOFU         | PERENNIAL  | staff scheduling software, multi-provider calendar        | Advanced feature showcase                     |
 | Self-service booking portals               | TOFU         | PERENNIAL  | client self-service portal, online booking page           | Growing expectation from clients              |
 | Recurring appointment management           | MOFU         | PERENNIAL  | recurring bookings, repeat client scheduling              | Retention angle                               |
@@ -34,10 +34,10 @@
 
 | Trend/Topic                                                 | Funnel Stage | Shelf Life | Keywords                                                  | Notes                      |
 | ----------------------------------------------------------- | ------------ | ---------- | --------------------------------------------------------- | -------------------------- |
-| Personalization in service businesses                       | TOFU         | PERENNIAL  | personalized customer experience, client preferences      | Broad appeal, evergreen    |
+| Personalization in med spas                                 | TOFU         | PERENNIAL  | personalized customer experience, client preferences      | Broad appeal, evergreen    |
 | Review management & reputation                              | TOFU         | PERENNIAL  | Google reviews for salons, reputation management          | Always relevant            |
 | Client communication preferences (WhatsApp vs SMS vs email) | MOFU         | PERENNIAL  | business WhatsApp, client communication channels          | Show messaging integration |
-| Customer retention strategies                               | TOFU         | PERENNIAL  | client retention salon, customer loyalty service business | Always relevant pain point |
+| Customer retention strategies                               | TOFU         | PERENNIAL  | client retention med spa, customer loyalty aesthetic clinic | Always relevant pain point |
 | Post-service follow-up automation                           | MOFU         | PERENNIAL  | automated follow-up, aftercare messages                   | Feature tie-in             |
 | Client intake digitization                                  | MOFU         | PERENNIAL  | digital intake forms, paperless salon                     | Vertical-specific angles   |
 | Self-service portal expectations                            | TOFU         | PERENNIAL  | customer self-service trends, portal expectations         | Growing demand             |
@@ -48,7 +48,7 @@
 
 | Trend/Topic                                | Funnel Stage | Shelf Life                               | Keywords                                               | Notes                    |
 | ------------------------------------------ | ------------ | ---------------------------------------- | ------------------------------------------------------ | ------------------------ |
-| Referral programs for service businesses   | MOFU         | PERENNIAL                                | salon referral program, spa referral ideas             | Feature tie-in           |
+| Referral programs for med spas             | MOFU         | PERENNIAL                                | med spa referral program, aesthetic clinic referral ideas | Feature tie-in       |
 | Social media booking integration           | TOFU         | PERENNIAL                                | Instagram booking, social media appointment scheduling | Platform-specific angles |
 | Email marketing for salons/spas            | MOFU         | PERENNIAL                                | salon email marketing, spa newsletter ideas            | Sequence feature tie-in  |
 | First 100 clients acquisition              | TOFU         | PERENNIAL                                | how to get first clients, new salon marketing          | Startup audience appeal  |
@@ -64,10 +64,10 @@
 | -------------------------------------------- | ------------ | ---------- | -------------------------------------------------------- | ------------------------------ |
 | Automation ROI for small businesses          | TOFU         | PERENNIAL  | business automation ROI, time savings automation         | Universal appeal               |
 | Staff management best practices              | MOFU         | PERENNIAL  | staff scheduling tips, employee management salon         | Feature tie-in                 |
-| Reporting & analytics for service businesses | MOFU         | PERENNIAL  | salon analytics, business metrics to track               | Dashboard feature tie-in       |
+| Reporting & analytics for med spas           | MOFU         | PERENNIAL  | med spa analytics, business metrics to track             | Dashboard feature tie-in       |
 | Reducing admin time                          | TOFU         | PERENNIAL  | reduce admin time, automate salon operations             | Pain point storytelling        |
 | Payment processing modernization             | MOFU         | PERENNIAL  | salon payment processing, contactless payments           | Invoice/payment feature tie-in |
-| Workflow automation examples                 | MOFU         | PERENNIAL  | booking automation workflow, service business automation | Automation builder tie-in      |
+| Workflow automation examples                 | MOFU         | PERENNIAL  | booking automation workflow, med spa automation          | Automation builder tie-in      |
 | Data-driven decision making                  | BOFU         | PERENNIAL  | data-driven salon management, analytics-first approach   | Reports feature tie-in         |
 
 ---
@@ -76,11 +76,11 @@
 
 | Trend/Topic                            | Funnel Stage | Shelf Life              | Keywords                                            | Notes                   |
 | -------------------------------------- | ------------ | ----------------------- | --------------------------------------------------- | ----------------------- |
-| AI in service businesses               | TOFU         | PERENNIAL (refreshable) | AI for salons, AI booking assistant, AI in wellness | Our core differentiator |
+| AI in med spas                         | TOFU         | PERENNIAL (refreshable) | AI for med spas, AI front desk, AI booking assistant for aesthetic clinics | Our core differentiator |
 | Aesthetic clinic industry trends       | TOFU         | PERENNIAL (refreshable) | medspa trends, aesthetic industry growth            | Vertical-specific       |
 | Auto dealership digital transformation | TOFU         | PERENNIAL (refreshable) | dealership digital tools, auto service technology   | Vertical-specific       |
 | Wellness industry growth               | TOFU         | PERENNIAL (refreshable) | wellness industry trends, spa market growth         | Vertical-specific       |
-| SaaS for service businesses            | TOFU         | PERENNIAL               | SaaS booking software, cloud salon management       | Category education      |
+| SaaS for med spas                      | TOFU         | PERENNIAL               | SaaS booking software, cloud med spa management     | Category education      |
 | Tech adoption in beauty/wellness       | TOFU         | PERENNIAL               | beauty tech trends, salon technology adoption       | Bridge content          |
 | Remote/hybrid service delivery         | TOFU         | PERENNIAL (refreshable) | virtual consultations, hybrid salon model           | Post-COVID trend        |
 

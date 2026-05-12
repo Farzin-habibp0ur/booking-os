@@ -1,11 +1,14 @@
-# BookingOS Chat Widget
+# Business Command Centre Chat Widget
 
-Embeddable chat widget for BookingOS. Connects to the web-chat WebSocket namespace for real-time customer messaging.
+Embeddable chat widget for Business Command Centre. Connects to the web-chat WebSocket namespace for real-time customer messaging.
+
+> ⚠️ The `BookingOSChat` global is preserved for back-compat. Future sites
+> should use the embed snippet that does not depend on this name.
 
 ## Embed Snippet
 
 ```html
-<!-- BookingOS Chat Widget -->
+<!-- Business Command Centre Chat Widget -->
 <script src="https://api.businesscommandcentre.com/chat-widget/booking-os-chat.js"></script>
 <script>
   BookingOSChat.init({
@@ -46,4 +49,4 @@ npm run dev
 - **Socket.IO** for real-time messaging via the `/web-chat` namespace
 - **Session persistence** via localStorage (reconnects to existing sessions)
 - **No framework dependencies** -- pure TypeScript DOM manipulation
-- **IIFE bundle** for global `BookingOSChat.init()` usage
+- **IIFE bundle** for global `BookingOSChat.init()` usage (the `BookingOSChat` global name is preserved for back-compat)

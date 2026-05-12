@@ -26,7 +26,6 @@ import {
   StickyNote,
   Trash2,
   ChevronDown,
-  Camera,
   Gift,
   Copy,
   Zap,
@@ -35,17 +34,11 @@ import { CustomerAutomationTimeline } from '@/components/customer-automation-tim
 import BookingFormModal from '@/components/booking-form-modal';
 import IntakeCard from '@/components/intake-card';
 import { RecentChangesPanel } from '@/components/action-history';
-import { MedicalAlertBanner } from '@/components/aesthetic/medical-alert-banner';
 import { OutboundCompose } from '@/components/outbound';
 import { BOOKING_STATUS_STYLES as STATUS_COLORS, ELEVATION, SPACING } from '@/lib/design-tokens';
 import { DetailSkeleton } from '@/components/skeleton';
-import { PhotoUploadCard } from '@/components/aesthetic/photo-upload-card';
-import { PhotoGallery } from '@/components/aesthetic/photo-gallery';
-import { PhotoComparisonViewer } from '@/components/aesthetic/photo-comparison-viewer';
-import { PhotoTimeline } from '@/components/aesthetic/photo-timeline';
 import { TreatmentPlanCard } from '@/components/aesthetic/treatment-plan-card';
 import { TreatmentPlanTimeline } from '@/components/aesthetic/treatment-plan-timeline';
-import { AftercareEnrollmentCard } from '@/components/aesthetic/aftercare-enrollment-card';
 
 export default function CustomerDetailPage() {
   const { id } = useParams();
@@ -87,19 +80,8 @@ export default function CustomerDetailPage() {
   // Action history state
   const [recentChanges, setRecentChanges] = useState<any[]>([]);
 
-  // Medical record state
-  const [medicalRecord, setMedicalRecord] = useState<any>(null);
-
-  // Clinical photos state
-  const [clinicalPhotos, setClinicalPhotos] = useState<any[]>([]);
-  const [photoComparisons, setPhotoComparisons] = useState<any[]>([]);
-  const [photoTab, setPhotoTab] = useState<'gallery' | 'timeline' | 'comparisons'>('gallery');
-
   // Treatment plans state
   const [treatmentPlans, setTreatmentPlans] = useState<any[]>([]);
-
-  // Aftercare enrollments state
-  const [aftercareEnrollments, setAftercareEnrollments] = useState<any[]>([]);
 
   // Referral credits state
   const [referralData, setReferralData] = useState<any>(null);
@@ -156,37 +138,13 @@ export default function CustomerDetailPage() {
     setLoading(false);
   };
 
-  const loadPhotos = async () => {
-    if (pack.slug !== 'aesthetic') return;
-    try {
-      const [photos, comparisons] = await Promise.all([
-        api.get<any[]>(`/clinical-photos?customerId=${id}`),
-        api.get<any[]>(`/clinical-photos/comparisons?customerId=${id}`),
-      ]);
-      setClinicalPhotos(photos || []);
-      setPhotoComparisons(comparisons || []);
-    } catch {
-      setClinicalPhotos([]);
-      setPhotoComparisons([]);
-    }
-  };
-
   useEffect(() => {
     loadCustomer();
-    api
-      .get<any>(`/medical-records?customerId=${id}`)
-      .then(setMedicalRecord)
-      .catch(() => setMedicalRecord(null));
-    loadPhotos();
     if (pack.slug === 'aesthetic') {
       api
         .get<any[]>(`/treatment-plans?customerId=${id}`)
         .then(setTreatmentPlans)
         .catch(() => setTreatmentPlans([]));
-      api
-        .get<any[]>(`/aftercare-protocols/enrollments/list?customerId=${id}`)
-        .then(setAftercareEnrollments)
-        .catch(() => setAftercareEnrollments([]));
     }
     if (pack.slug === 'aesthetic') {
       setReferralLoading(true);
@@ -439,18 +397,6 @@ export default function CustomerDetailPage() {
           </button>
         </div>
       </div>
-
-      {/* Medical Alert */}
-      {medicalRecord?.flagged && (
-        <div className="px-6 pt-4">
-          <MedicalAlertBanner
-            flagged={medicalRecord.flagged}
-            flagReason={medicalRecord.flagReason}
-            allergies={medicalRecord.allergies}
-            contraindications={medicalRecord.contraindications}
-          />
-        </div>
-      )}
 
       {/* Delete Confirmation Modal */}
       {showDeleteConfirm && (
@@ -855,94 +801,6 @@ export default function CustomerDetailPage() {
                 />
               ))}
             </div>
-          </div>
-        )}
-
-        {/* Aftercare Enrollments — Aesthetic only */}
-        {pack.slug === 'aesthetic' && aftercareEnrollments.length > 0 && (
-          <div className={cn(ELEVATION.card, 'bg-white p-5 mb-6')} data-testid="aftercare-section">
-            <h2 className="text-sm font-semibold text-slate-900 uppercase flex items-center gap-2 mb-4">
-              Aftercare
-              <span className="text-xs bg-blue-50 text-blue-700 px-2 py-0.5 rounded-full font-medium">
-                {aftercareEnrollments.length}
-              </span>
-            </h2>
-            <div className="space-y-3">
-              {aftercareEnrollments.map((enrollment: any) => (
-                <AftercareEnrollmentCard
-                  key={enrollment.id}
-                  enrollment={enrollment}
-                  onCancel={async (enrollmentId) => {
-                    try {
-                      await api.post(`/aftercare-protocols/enrollments/${enrollmentId}/cancel`, {});
-                      setAftercareEnrollments((prev) =>
-                        prev.map((e) =>
-                          e.id === enrollmentId ? { ...e, status: 'CANCELLED' } : e,
-                        ),
-                      );
-                    } catch {
-                      // silently ignore
-                    }
-                  }}
-                />
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Clinical Photos — Aesthetic only */}
-        {pack.slug === 'aesthetic' && (
-          <div className={cn(ELEVATION.card, 'bg-white p-5 mb-6')} data-testid="photos-section">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-sm font-semibold text-slate-900 uppercase flex items-center gap-2">
-                <Camera size={14} className="text-lavender-600" />
-                Photos
-                {clinicalPhotos.length > 0 && (
-                  <span className="text-xs bg-lavender-50 text-lavender-700 px-2 py-0.5 rounded-full font-medium">
-                    {clinicalPhotos.length}
-                  </span>
-                )}
-              </h2>
-              <div className="flex gap-1">
-                {(['gallery', 'timeline', 'comparisons'] as const).map((tab) => (
-                  <button
-                    key={tab}
-                    onClick={() => setPhotoTab(tab)}
-                    className={cn(
-                      'text-xs px-3 py-1 rounded-lg font-medium transition-colors',
-                      photoTab === tab
-                        ? 'bg-lavender-50 text-lavender-700'
-                        : 'text-slate-500 hover:bg-slate-100',
-                    )}
-                  >
-                    {tab.charAt(0).toUpperCase() + tab.slice(1)}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Upload card */}
-            <div className="mb-4">
-              <PhotoUploadCard customerId={id as string} onUploaded={() => loadPhotos()} />
-            </div>
-
-            {/* Photo content */}
-            {photoTab === 'gallery' && (
-              <PhotoGallery
-                photos={clinicalPhotos}
-                onDelete={async (photoId) => {
-                  try {
-                    await api.del(`/clinical-photos/${photoId}`);
-                    toast('Photo deleted');
-                    loadPhotos();
-                  } catch {
-                    toast('Failed to delete photo', 'error');
-                  }
-                }}
-              />
-            )}
-            {photoTab === 'timeline' && <PhotoTimeline photos={clinicalPhotos} />}
-            {photoTab === 'comparisons' && <PhotoComparisonViewer comparisons={photoComparisons} />}
           </div>
         )}
 

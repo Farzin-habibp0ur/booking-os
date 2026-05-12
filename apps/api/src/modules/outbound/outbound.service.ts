@@ -78,22 +78,25 @@ export class OutboundService {
         include: { customer: true, staff: true },
       });
 
-      if (source === 'AI') {
-        await tx.frontDeskAttribution.create({
-          data: {
-            businessId: data.businessId,
-            customerId: data.customerId,
-            conversationId: data.conversationId,
-            outboundDraftId: created.id,
-            source: this.getAttributionSource(data.intent),
-            status: 'OPEN',
-            channel,
-            confidence: data.confidence ?? null,
-            reason: data.intent || null,
-            metadata: (data.metadata || {}) as any,
-          },
-        });
-      }
+      // LEGACY: Phase 4 moved attribution to booking-creation hook
+      // (front-desk-attribution.service.createForBooking). Kept commented for
+      // one release for safety; remove in next cleanup.
+      // if (source === 'AI') {
+      //   await tx.frontDeskAttribution.create({
+      //     data: {
+      //       businessId: data.businessId,
+      //       customerId: data.customerId,
+      //       conversationId: data.conversationId,
+      //       outboundDraftId: created.id,
+      //       source: this.getAttributionSource(data.intent),
+      //       status: 'OPEN',
+      //       channel,
+      //       confidence: data.confidence ?? null,
+      //       reason: data.intent || null,
+      //       metadata: (data.metadata || {}) as any,
+      //     },
+      //   });
+      // }
 
       return created;
     });
@@ -209,15 +212,22 @@ export class OutboundService {
         data: { status: 'SENT', sentAt, conversationId },
       });
 
-      await tx.frontDeskAttribution.updateMany({
-        where: { businessId, outboundDraftId: id },
-        data: { status: 'OPEN', openedAt: sentAt, conversationId },
-      });
+      // LEGACY: Phase 4 moved attribution to booking-creation hook
+      // (front-desk-attribution.service.createForBooking). Kept commented for
+      // one release for safety; remove in next cleanup.
+      // await tx.frontDeskAttribution.updateMany({
+      //   where: { businessId, outboundDraftId: id },
+      //   data: { status: 'OPEN', openedAt: sentAt, conversationId },
+      // });
 
       return draft;
     });
   }
 
+  // LEGACY: Phase 4 moved attribution to booking-creation hook
+  // (front-desk-attribution.service.createForBooking). Kept for one release
+  // alongside the commented call sites above; remove in next cleanup.
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   private getAttributionSource(intent?: string): string {
     const normalized = intent?.toUpperCase();
     if (normalized === 'QUOTE_FOLLOWUP' || normalized === 'CONSULT_FOLLOWUP') {

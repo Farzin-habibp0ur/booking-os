@@ -37,6 +37,7 @@ export class PilotApplicationController {
 @Controller('admin/pilot-applications')
 @UseGuards(AuthGuard('jwt'), RolesGuard)
 @Roles('SUPER_ADMIN')
+@Throttle({ default: { ttl: 60000, limit: 30 } })
 export class AdminPilotApplicationController {
   constructor(private pilotApplications: PilotApplicationService) {}
 
@@ -58,5 +59,17 @@ export class AdminPilotApplicationController {
   @Patch(':id')
   update(@Param('id') id: string, @Body() body: UpdatePilotApplicationDto) {
     return this.pilotApplications.update(id, body);
+  }
+
+  @Patch(':id/accept')
+  @Throttle({ default: { ttl: 60000, limit: 10 } })
+  accept(@Param('id') id: string) {
+    return this.pilotApplications.acceptApplicationAndProvision(id);
+  }
+
+  @Patch(':id/waitlist-year-2')
+  @Throttle({ default: { ttl: 60000, limit: 20 } })
+  waitlistYear2(@Param('id') id: string) {
+    return this.pilotApplications.addToYear2Waitlist(id);
   }
 }

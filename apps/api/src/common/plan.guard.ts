@@ -28,6 +28,8 @@ const TIER_ORDER: Record<PlanTier, number> = {
   starter: 0,
   professional: 1,
   enterprise: 2,
+  // AI Front Desk pilot graduation tier — sits at top of order (all features unlocked)
+  aifd: 3,
 };
 
 @Injectable()

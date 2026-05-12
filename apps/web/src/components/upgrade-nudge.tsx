@@ -86,11 +86,13 @@ export function UpgradeNudge({ current, plan, resource, resourceLabel }: Upgrade
           Upgrade Now
         </button>
         <button
+          type="button"
           onClick={handleDismiss}
+          aria-label="Dismiss upgrade prompt"
           className="p-1 text-slate-400 hover:text-slate-600 transition-colors"
           data-testid="upgrade-nudge-dismiss"
         >
-          <X size={16} />
+          <X size={16} aria-hidden="true" />
         </button>
       </div>
     </div>

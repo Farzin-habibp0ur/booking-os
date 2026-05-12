@@ -146,13 +146,15 @@ export default function ServicesPage() {
                       )}
                     </div>
                     <button
+                      type="button"
                       onClick={() => {
                         setEditing(s);
                         setShowForm(true);
                       }}
+                      aria-label={`Edit ${s.name || 'service'}`}
                       className="p-1 hover:bg-slate-100 rounded transition-colors"
                     >
-                      <Pencil size={14} />
+                      <Pencil size={14} aria-hidden="true" />
                     </button>
                   </div>
                   <div className="flex items-center gap-4 mt-3 text-sm text-slate-600">

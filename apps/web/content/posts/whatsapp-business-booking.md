@@ -32,3 +32,7 @@ The real power of WhatsApp integration lies in two-way messaging. Clients can as
 ## Best Practices
 
 Keep messages concise and professional. Use message templates approved by Meta for outbound notifications. Always provide an easy way for clients to opt out. And most importantly, respond promptly — WhatsApp users expect fast replies.
+
+---
+
+Business Command Centre is the AI Front Desk for medical spas — Instagram, WhatsApp, website chat, SMS, and email replies drafted for staff approval, with cancellations and consult follow-ups handled in one place. [Apply for Pilot](/pilot).
