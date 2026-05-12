@@ -386,10 +386,7 @@ export default function ReferralSettingsPage() {
 
         {/* Credit expiry */}
         <div className="mt-5">
-          <label
-            htmlFor="credit-expiry"
-            className="text-sm font-medium text-slate-700 mb-1 block"
-          >
+          <label htmlFor="credit-expiry" className="text-sm font-medium text-slate-700 mb-1 block">
             <Clock size={13} className="inline mr-1 -mt-0.5" />
             Credit expiry
           </label>
@@ -414,10 +411,7 @@ export default function ReferralSettingsPage() {
 
         {/* Max referrals */}
         <div className="mt-5">
-          <label
-            htmlFor="max-referrals"
-            className="text-sm font-medium text-slate-700 mb-1 block"
-          >
+          <label htmlFor="max-referrals" className="text-sm font-medium text-slate-700 mb-1 block">
             Max referrals per patient
           </label>
           <div className="flex items-center gap-2">
@@ -502,10 +496,7 @@ export default function ReferralSettingsPage() {
 
         {/* Email subject */}
         <div className="mt-4">
-          <label
-            htmlFor="email-subject"
-            className="text-sm font-medium text-slate-700 mb-1 block"
-          >
+          <label htmlFor="email-subject" className="text-sm font-medium text-slate-700 mb-1 block">
             Email Subject
           </label>
           <input
