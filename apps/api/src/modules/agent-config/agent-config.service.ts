@@ -13,11 +13,12 @@ import { UpdateAgentConfigDto } from './dto';
 
 /**
  * Marketing agents are BookingOS's internal growth engine — they should NOT
- * be created or returned for customer businesses. This is the current
- * customer-facing exclusion list using the live MKT_* IDs as defined in
- * `apps/api/src/modules/marketing-agent/agents/`. The legacy 'BlogWriter',
- * 'SocialCreator', etc. IDs from before are no longer issued, so this filter
- * matches what the marketing-agent module actually emits today.
+ * be created or returned for customer businesses. The MKT_* IDs are what the
+ * marketing-agent module emits today (see
+ * `apps/api/src/modules/marketing-agent/agents/`). The legacy CamelCase IDs
+ * are kept here because old AgentConfig rows with those names still exist in
+ * some environments and would otherwise leak into the customer-facing
+ * `/agent-config` response.
  */
 const MARKETING_AGENT_TYPES = [
   'MKT_BLOG_WRITER',
@@ -32,6 +33,19 @@ const MARKETING_AGENT_TYPES = [
   'MKT_TREND_ANALYZER',
   'MKT_CALENDAR_PLANNER',
   'MKT_ROI_REPORTER',
+  // Legacy IDs (pre-MKT_ rename) — kept for back-compat with existing data
+  'BlogWriter',
+  'SocialCreator',
+  'EmailComposer',
+  'CaseStudyWriter',
+  'VideoScriptWriter',
+  'NewsletterComposer',
+  'ContentScheduler',
+  'ContentPublisher',
+  'PerformanceTracker',
+  'TrendAnalyzer',
+  'ContentCalendar',
+  'ContentROI',
 ];
 
 @Injectable()
